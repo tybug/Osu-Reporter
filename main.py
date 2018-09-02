@@ -6,15 +6,14 @@ from parser import parse_flair_data, parse_user_data, parse_gamemode, create_rep
 from db import add_submission, add_user, submission_exists, get_all_users, remove_user
 import threading
 
-reddit = None # hack to make reddit global (for check_banned())
-
-def main():
-
-	reddit = praw.Reddit(client_id=secret.ID,
+# keep reddit global
+reddit = praw.Reddit(client_id=secret.ID,
                      client_secret=secret.SECRET,
                      user_agent="python:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
+
+def main():
 
 	subreddit = reddit.subreddit(SUB)
 	check_banned() # automatically repeats on interval
@@ -88,8 +87,8 @@ def check_banned():
 
 
 	# Might as well forward pms here...already have an automated function, why not?
-	for message in reddit.inbox.unread()
-		praw.Redditor(reddit, AUTHOR).message("REPLY to Report Bot FROM u/{}", message.content).format(message.author)
+	for message in reddit.inbox.unread():		
+		reddit.redditor(AUTHOR).message("REPLY to Report Bot FROM u/{}".format(message.author), message.body)
 		message.mark_read()
 
 
