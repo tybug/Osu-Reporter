@@ -9,12 +9,14 @@ def add_submission(id):
 	c.commit()
 	c.close()
 
+
 def add_user(id, post):
 	c = sqlite3.connect(DB)
 	data = [id, post]
 	c.execute("INSERT INTO users VALUES(?, ?)", data)
 	c.commit()
 	c.close()
+
 
 def submission_exists(id):
 	c = sqlite3.connect(DB)
@@ -25,6 +27,7 @@ def submission_exists(id):
 	finally:
 		c.close()
 
+
 def get_all_users():
 	c = sqlite3.connect(DB)
 	ret = []
@@ -32,6 +35,7 @@ def get_all_users():
 		ret.append(row)
 
 	return ret
+
 
 def remove_user(id):
 	c = sqlite3.connect(DB)

@@ -6,7 +6,7 @@ from parser import parse_flair_data, parse_user_data, parse_gamemode, create_rep
 from db import add_submission, add_user, submission_exists, get_all_users, remove_user
 import threading
 
-reddit = None
+reddit = None # hack to make reddit global (for check_banned())
 
 def main():
 
@@ -58,7 +58,7 @@ def process_submission(submission):
 
 
 
-	player_data = parse_user_data(player)
+	player_data = parse_user_data(player, gamemode)
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
 			submission.reply(REPLY_ALREADY_BANNED)
@@ -79,7 +79,7 @@ def check_banned():
 
 		id = data[0] # user id
 		post_id = data[1] # post id
-		user_data = parse_user_data(id)
+		user_data = parse_user_data(id, "0") # gamemode doesn't matter here since we're just checking for empty response
 
 		if(user_data is None): # user was restricted
 			remove_user(id)
