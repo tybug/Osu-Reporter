@@ -42,7 +42,7 @@ def process_submission(submission):
 	title_data = re.split(TITLE_SPLIT, title)
 	if(len(title_data) < 3): 
 		if(REPLY_MALFORMAT_COMMENT):
-			submission.reply(REPLY_MALFORMAT_COMMENT)
+			submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
 
 
@@ -61,7 +61,7 @@ def process_submission(submission):
 	player_data = parse_user_data(player, gamemode)
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
-			submission.reply(REPLY_ALREADY_BANNED)
+			submission.reply(REPLY_ALREADY_BANNED + REPLY_INFO)
 		return
 	# Leave info table comment
 	submission.reply(create_reply(player_data))

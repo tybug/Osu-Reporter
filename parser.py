@@ -41,9 +41,9 @@ def create_reply(data):
 	return ("{}'s profile: {}\n\n"
 			"| Rank | PP | Playcount |\n"
 			":-:|:-:|:-:\n"
-			"| #{:,} | {:,} | {:,} |").format(
+			"| #{:,} | {:,} | {:,} |{}").format(
 										data["username"],
 										USERS + data["user_id"],
 										int(data["pp_rank"]),
 										round(float(data["pp_raw"])),
-										int(data["playcount"]))
+										int(data["playcount"]), REPLY_INFO)

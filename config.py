@@ -26,14 +26,14 @@ CHECK_INTERVAL = 900 # Check for banned users every 15 minutes (900 seconds)
 # Comment Config (if any of these are set to "", no comment will be left)
 # Appended to every comment
 REPLY_INFO = ("\n\n***\n\n"
-			  "[Source](https://github.com/tybug/Osu-Reporter) | [Developer](htpps://reddit.com/u/tybug2 | Reply to leave feedback")
+			  "[Source](https://github.com/tybug/Osu-Reporter) | [Developer](htpps://reddit.com/u/tybug2) | Reply to leave feedback")
 
 # if the title is malformatted.
 REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
-					", and repost with a correctly formatted title.") + REPLY_INFO
+					", and repost with a correctly formatted title.")
 # if the reported user's page gives 404 at time of report
-REPLY_ALREADY_BANNED = ("The user you reported is already restricted, or doesn't exist!") + REPLY_INFO
+REPLY_ALREADY_BANNED = ("The user you reported is already restricted, or doesn't exist!")
 
 
 
