@@ -1,21 +1,49 @@
-import config
+from config import *
 import re
-import utils
+import requests
+from secret import KEY
 
 def parse_gamemode(input):
 	input = input.lower()
-	for strip in config.GAMEMODE_STRIP:
+	for strip in GAMEMODE_STRIP:
 		input = re.sub(strip, "", input)
-	if(input in config.GAMEMODE_MATCH_STD):
-		return utils.GAMEMODE_STD
-	if(input in config.GAMEMODE_MATCH_CATCH):
-		return utils.GAMEMODE_CATCH
-	if(input in config.GAMEMODE_MATCH_MANIA):
-		return utils.GAMEMODE_MANIA
-	if(input in config.GAMEMODE_MATCH_TAIKO):
-		return utils.GAMEMODE_TAIKO
-	return GAMEMODE_STD # assume std if all else fails
+
+	for gamemode in GAMEMODES:
+		if(input in GAMEMODES[gamemode]):
+			return gamemode
+	
+	return "std" # assume std if all else fails
 
 
 def parse_user_data(username):
-	pass
+	response = requests.get(API + "get_user?k=" + KEY + "&u=" + username)
+	data = response.json()
+	if(not data): # empty response
+		return
+
+	return data[0] # we could remove extraneous data here...but honestly it's so low volume anyway
+
+def parse_flair_data(offense):
+	'''
+	Returns a list with [0] being what to name the flair and [1] being the css class of the flair,
+	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
+	'''
+	offense = offense.split("\s+") # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing [ Discussion ]"
+	for flair in FLAIRS:
+		if([i for i in offense if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
+			return [FLAIRS[flair][-1], flair]
+
+	if(DEFAULT_TO_CHEATING):
+		return ["cheating", "Cheating"]
+
+
+def create_reply(data):
+	return ("{}'s profile: {}\n\n"
+			"| Rank | PP | Playcount |\n"
+			":-:|:-:|:-:\n"
+			"| #{:,} | {:,} | {:,} |").format(
+										data["username"],
+										USERS + data["user_id"],
+										int(data["pp_rank"]),
+										round(float(data["pp_raw"])),
+										int(data["playcount"]))

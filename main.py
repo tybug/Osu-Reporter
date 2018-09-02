@@ -1,9 +1,12 @@
 import praw
-import config
+from config import *
 import secret
 import re
-import utils
-import parser
+from parser import parse_flair_data, parse_user_data, parse_gamemode, create_reply
+from db import add_submission, add_user, submission_exists, get_all_users, remove_user
+import threading
+
+reddit = None
 
 def main():
 
@@ -13,38 +16,75 @@ def main():
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
 
-	subreddit = reddit.subreddit(config.SUB)
+	subreddit = reddit.subreddit(SUB)
+	check_banned() # automatically repeats on interval
+
 	# Iterate over every new submission
 	for submission in subreddit.stream.submissions():
 		process_submission(submission)
 
+
 def process_submission(submission):
+	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
+		return
+
+	add_submission(submission.id)
+
+
 	title = submission.title
-	for strip in config.TITLE_STRIP:
+	for strip in TITLE_STRIP:
 		# Escape for regex
-		if(strip in config.ESCAPE_REQUIRED):
+		if(strip in ESCAPE_REQUIRED):
 			strip = "\\" + strip
 		title = re.sub(strip, "", title)
 
-	data = re.split(config.TITLE_SPLIT, title)
-	
-	if(len(data) < 3): 
-		if(config.REPLY_MALFORMAT_COMMENT):
-			pass
-			# submission.reply(config.REPLY_MALFORMAT_COMMENT)
+
+	title_data = re.split(TITLE_SPLIT, title)
+	if(len(title_data) < 3): 
+		if(REPLY_MALFORMAT_COMMENT):
+			submission.reply(REPLY_MALFORMAT_COMMENT)
 		return
 
-	print("Gamemode: {}\nPlayer: {}\nType: {}".format(data[0], data[1], data[2]))
-	gamemode = parser.parse_gamemode(data[0])
-	player = data[1]
-	offense = data[2]
 
-	data = parser.parse_user_data(player)
-	if(data is None): # user be banned, this will rarely if ever happen, maybe OP was just drunk who knows
-		if(config.REPLY_ALREADY_BANNED):
-			pass
-			# submission.reply(config.REPLY_ALREADY_BANNED)
+	gamemode = parse_gamemode(title_data[0])
+	player = title_data[1]
+	offense = title_data[2]
+	# print("Gamemode: {}\nPlayer: {}\nType: {}".format(gamemode, player, offense))
+
+	# Flair it
+	flair_data = parse_flair_data(offense)
+	if(flair_data):
+		submission.mod.flair(flair_data[0], flair_data[1])
+
+
+
+	player_data = parse_user_data(player)
+	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
+		if(REPLY_ALREADY_BANNED):
+			submission.reply(REPLY_ALREADY_BANNED)
 		return
+	# Leave info table comment
+	submission.reply(create_reply(player_data))
+
+
+	# Add to db to check if user was banned on increments
+	add_user(player_data["user_id"], submission.id)
+
+
+
+def check_banned():
+	threading.Timer(CHECK_INTERVAL, check_banned).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
+
+	for data in get_all_users():
+
+		id = data[0] # user id
+		post_id = data[1] # post id
+		user_data = parse_user_data(id)
+
+		if(user_data is None): # user was restricted
+			remove_user(id)
+			post = praw.Submission(reddit, post_id) # get praw post from id to flair
+			post.mod.flair("Resolved", "resolved")
 
 
 
