@@ -3,6 +3,8 @@ DB = "db.db" # relative path to database
 SUB = 'OsuReporterTest' # listen for submissions to this sub
 API = "https://osu.ppy.sh/api/"
 USERS = "https://osu.ppy.sh/users/"
+AUTHOR = "tybug2" # user to forward replies and dms to
+
 # include alternate names for gamemodes (or common mispellings)
 GAMEMODES = {
 			 "0": ["standard", "std"],
@@ -15,7 +17,7 @@ GAMEMODES = {
 FLAIRS = {
 		  "discussion": ["discussion", "Discussion"],
 		  "blatant": ["blatant", "Blatant"],
-		  "multi": ["multi-account", "Multiacc", "multi", "Multi-account"],
+		  "multi": ["multi-account", "multiacc", "multi", "multiaccount", "Multi-account"],
 		  "cheating": ["cheating", "cheater", "Cheating"]
 		 }
 
@@ -42,4 +44,4 @@ ESCAPE_REQUIRED = ["|", ".", "["] # regex wants escape characters for these
 TITLE_STRIP = ["|", "[", "]"] # strip before parsing title, could want to add fancy brackets people use for instance, or if you ever change title formatting
 TITLE_SPLIT = "\s+" # split on this regex
 GAMEMODE_STRIP = ["osu!", "o!"] # strip before parsing gamemode
-FLAIR_SPLIT = "/\s+" # split for word search on this regex
+FLAIR_SPLIT = "/\s+" # split for flair word search on this regex

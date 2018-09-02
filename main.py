@@ -87,6 +87,11 @@ def check_banned():
 			post.mod.flair("Resolved", "resolved")
 
 
+	# Might as well forward pms here...already have an automated function, why not?
+	for message in reddit.inbox.unread()
+		praw.Redditor(reddit, AUTHOR).message("REPLY to Report Bot FROM u/{}", message.content).format(message.author)
+		message.mark_read()
+
 
 if __name__ == "__main__":
     main()

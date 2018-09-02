@@ -28,7 +28,7 @@ def parse_flair_data(offense):
 	Returns a list with [0] being what to name the flair and [1] being the css class of the flair,
 	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
 	'''
-	offense = re.split(FLAIR_SPLIT, offense) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]"
+	offense = re.split(FLAIR_SPLIT, offense.lower()) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]"
 	for flair in FLAIRS:
 		if([i for i in offense if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
 			return [FLAIRS[flair][-1], flair]
