@@ -10,8 +10,8 @@ LIMIT_DAYS = 2 # stop checking threads for invalid after they're 2 days old
 GAMEMODES = {
 			 "0": ["standard", "std"],
 			 "1": ["taiko"],
-			 "3": ["mania"], 
-			 "2": ["catch", "ctb"]
+			 "3": ["mania", "m"], 
+			 "2": ["catch", "ctb", "fruits"]
 			 }
 # css class : [possible matches, ..., ..., flair title]
 # Don't bother accounting for meta or other, hard to parse
