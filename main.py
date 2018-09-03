@@ -49,7 +49,6 @@ def process_submission(submission):
 	gamemode = parse_gamemode(title_data[0])
 	player = title_data[1]
 	offense = title_data[2]
-	# print("Gamemode: {}\nPlayer: {}\nType: {}".format(gamemode, player, offense))
 
 	# Flair it
 	flair_data = parse_flair_data(offense)
