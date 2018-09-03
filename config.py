@@ -1,6 +1,6 @@
 # General Config
 DB = "db.db" # relative path to database
-SUB = 'osureport' # listen for submissions to this sub
+SUB = 'osureportertest' # listen for submissions to this sub
 API = "https://osu.ppy.sh/api/"
 USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to

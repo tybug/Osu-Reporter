@@ -3,7 +3,7 @@ from config import *
 import secret
 import re
 from parser import parse_flair_data, parse_user_data, parse_gamemode, create_reply
-from db import add_submission, add_user, submission_exists, get_all_users, remove_user
+from db import *
 import threading
 import datetime
 
@@ -67,8 +67,9 @@ def process_submission(submission):
 	submission.reply(create_reply(player_data))
 
 
-	# Add to db to check if user was banned on increments
-	add_user(player_data["user_id"], submission.id, submission.created_utc)
+	# only add to db if it's not already there
+	if(not user_exists(player_data["user_id"])):
+		add_user(player_data["user_id"], submission.id, submission.created_utc)
 
 
 
