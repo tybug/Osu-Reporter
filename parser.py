@@ -57,7 +57,8 @@ def create_reply(data):
 	return ("{}'s profile: {}\n\n"
 			"| Rank | PP | Playcount |\n"
 			":-:|:-:|:-:\n"
-			"| #{:,} | {:,} | {:,} |{}").format(
+			"| #{:,} | {:,} | {:,} |"
+			"{}").format(
 										data["username"],
 										USERS + data["user_id"],
 										int(data["pp_rank"]),

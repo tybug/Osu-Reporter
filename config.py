@@ -15,6 +15,7 @@ GAMEMODES = {
 			 }
 # css class : [possible matches, ..., ..., flair title]
 # Don't bother accounting for meta or other, hard to parse
+# Prioritizes flair types higher in the list - if a title contains both "discussion" and "multiacc", it will be flaired as "discussion"
 FLAIRS = {
 		  "discussion": ["discussion", "Discussion"],
 		  "blatant": ["blatant", "Blatant"],
@@ -31,13 +32,12 @@ CHECK_INTERVAL = 900 # Check for banned users every 15 minutes (900 seconds)
 REPLY_INFO = ("\n\n***\n\n"
 			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)")
 
-# if the title is malformatted.
+# if the title is malformatted
 REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
 					", and repost with a correctly formatted title.")
 # if the reported user's page gives 404 at time of report
 REPLY_ALREADY_BANNED = ("The user you reported is already restricted, or doesn't exist!")
-
 
 
 # Parse Config
