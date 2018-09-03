@@ -3,7 +3,7 @@ DB = "db.db" # relative path to database
 SUB = 'osureport' # listen for submissions to this sub
 API = "https://osu.ppy.sh/api/"
 USERS = "https://osu.ppy.sh/users/"
-AUTHOR = "tybug2" # user to forward replies and dms to
+AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 2 # stop checking threads for invalid after they're 2 days old
 
 # include alternate names for gamemodes (or common mispellings)
@@ -29,7 +29,7 @@ CHECK_INTERVAL = 900 # Check for banned users every 15 minutes (900 seconds)
 # Comment Config (if any of these are set to "", no comment will be left)
 # Appended to every comment
 REPLY_INFO = ("\n\n***\n\n"
-			  "[Source](https://github.com/tybug/Osu-Reporter) | [Developer](https://reddit.com/u/tybug2) | Reply to leave feedback")
+			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)")
 
 # if the title is malformatted.
 REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
