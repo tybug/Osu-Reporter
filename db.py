@@ -10,10 +10,10 @@ def add_submission(id):
 	c.close()
 
 
-def add_user(id, post):
+def add_user(id, post, date):
 	c = sqlite3.connect(DB)
-	data = [id, post]
-	c.execute("INSERT INTO users VALUES(?, ?)", data)
+	data = [id, post, date]
+	c.execute("INSERT INTO users VALUES(?, ?, ?)", data)
 	c.commit()
 	c.close()
 
@@ -39,6 +39,6 @@ def get_all_users():
 
 def remove_user(id):
 	c = sqlite3.connect(DB)
-	c.execute("DELETE FROM users WHERE id=?", id)
+	c.execute("DELETE FROM users WHERE id=?", [id])
 	c.commit()
 	c.close()

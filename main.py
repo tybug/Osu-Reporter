@@ -5,6 +5,7 @@ import re
 from parser import parse_flair_data, parse_user_data, parse_gamemode, create_reply
 from db import add_submission, add_user, submission_exists, get_all_users, remove_user
 import threading
+import datetime
 
 # keep reddit global
 reddit = praw.Reddit(client_id=secret.ID,
@@ -67,17 +68,27 @@ def process_submission(submission):
 
 
 	# Add to db to check if user was banned on increments
-	add_user(player_data["user_id"], submission.id)
+	add_user(player_data["user_id"], submission.id, submission.created_utc)
 
 
 
 def check_banned():
+	print("checking banned")
 	threading.Timer(CHECK_INTERVAL, check_banned).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
 
 	for data in get_all_users():
 
 		id = data[0] # user id
 		post_id = data[1] # post id
+		post_date = data[2] # post submission date
+
+		post_date = int(float(post_date))
+		difference = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(post_date)
+		if(difference.total_seconds() > LIMIT_DAYS * 24 * 60 * 60): # compare seconds
+			remove_user(id)
+			return
+
+
 		user_data = parse_user_data(id, "0") # gamemode doesn't matter here since we're just checking for empty response
 
 		if(user_data is None): # user was restricted
