@@ -8,10 +8,10 @@ LIMIT_DAYS = 2 # stop checking threads for invalid after they're 2 days old
 
 # include alternate names for gamemodes (or common mispellings)
 GAMEMODES = {
-			 "0": ["standard", "std"],
-			 "1": ["taiko"],
+			 "0": ["standard", "std", "s"],
+			 "1": ["taiko", "t"],
 			 "3": ["mania", "m"], 
-			 "2": ["catch", "ctb", "fruits"]
+			 "2": ["catch", "ctb", "fruits", "c"]
 			 }
 # css class : [possible matches, ..., ..., flair title]
 # Don't bother accounting for meta or other, hard to parse
@@ -46,3 +46,31 @@ TITLE_STRIP = ["|", "[", "]"] # strip before parsing title, could want to add fa
 TITLE_SPLIT = "\s+" # split on this regex
 GAMEMODE_STRIP = ["osu!", "o!"] # strip before parsing gamemode
 FLAIR_SPLIT = "/\s+" # split for flair word search on this regex
+
+
+
+# Full credit for these two to Christoper (https://github.com/christopher-dG/osu-bot)
+MODS_INT = {
+    "": 1 >> 1,
+    "NF": 1 << 0,
+    "EZ": 1 << 1,
+    "TD": 1 << 2,
+    "HD": 1 << 3,
+    "HR": 1 << 4,
+    "SD": 1 << 5,
+    "DT": 1 << 6,
+    "RX": 1 << 7,
+    "HT": 1 << 8,
+    "NC": 1 << 6 | 1 << 9,  # DT is always set along with NC.
+    "FL": 1 << 10,
+    "AT": 1 << 11,
+    "SO": 1 << 12,
+    "AP": 1 << 13,
+    "PF": 1 << 5 | 1 << 14,  # SD is always set along with PF.
+    "V2": 1 << 29
+}
+
+MOD_ORDER = [
+    "EZ", "HD", "HT", "DT", "NC", "HR", "FL", "NF",
+    "SD", "PF", "RX", "AP", "SO", "AT", "V2", "TD",
+]

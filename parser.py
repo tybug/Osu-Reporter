@@ -21,17 +21,23 @@ def parse_gamemode(input):
 	return "0" # assume std if all else fails
 
 
+
 def parse_user_data(username, mode):
 	'''
 	Returns a list consisting of the json response the osu api gives us when querying data for the given user in the given mode
 	'''
 
 	response = requests.get(API + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode)
-	data = response.json()
-	if(not data): # empty response
+	user_data = response.json()
+	if(not user_data): # empty response (user banned / doesn't exist)
 		return
 
-	return data[0] # we could remove extraneous data here...but honestly it's so low volume anyway
+	response = requests.get(API + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode)
+	top_data = response.json()
+
+	return [user_data[0], top_data] # we could remove extraneous data here...but honestly it's so low volume anyway
+
+
 
 def parse_flair_data(offense):
 	'''
@@ -48,19 +54,62 @@ def parse_flair_data(offense):
 		return ["cheating", "Cheating"]
 
 
+
 def create_reply(data):
 	'''
-	Data is a list - the json data from the osu api
-	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user, and REPLY_INFO appended
+	Data is a list of lists - element one is user data, the second element is a list of top plays info json
+	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user, 
+	a table with that user's top plays, and REPLY_INFO appended
 	'''
-	
-	return ("{}'s profile: {}\n\n"
+	user_data = data[0]
+	top_data = data[1]
+	reply = ("{}'s profile: {}\n\n"
 			"| Rank | PP | Playcount |\n"
 			":-:|:-:|:-:\n"
-			"| #{:,} | {:,} | {:,} |"
-			"{}").format(
-										data["username"],
-										USERS + data["user_id"],
-										int(data["pp_rank"]),
-										round(float(data["pp_raw"])),
-										int(data["playcount"]), REPLY_INFO)
+			"| #{:,} | {:,} | {:,} |\n\n"
+			"| Top Plays | Mods | PP | Date |\n"
+			":-:|:-:|:-:|:-:|:-:\n"
+			.format(
+					user_data["username"],
+					USERS + user_data["user_id"],
+					int(user_data["pp_rank"]),
+					round(float(user_data["pp_raw"])),
+					int(user_data["playcount"])
+			))
+
+
+	for play in top_data:
+		reply += ("| {} | {} | {:,} | {} |\n"
+				 .format(
+				 		  parse_map_data(play["beatmap_id"])["title"],
+				 		  parse_mods(int(play["enabled_mods"])),
+				 		  round(float(play["pp"])),
+				 		  play["date"].split(" ")[0].replace("-", "/")
+				 ))
+
+
+	return (reply + REPLY_INFO)
+
+
+
+def parse_mods(mods_int):
+    """
+    Convert a mod integer to a mod string.
+    Adapted slightly from https://github.com/christopher-dG/osu-bot. Full credit to christopher.
+    """
+    mods = []
+    for k, v in MODS_INT.items():
+        if v & mods_int == v:
+            mods.append(k)
+
+    ordered = list(filter(lambda m: m in mods, MOD_ORDER))
+    "NC" in ordered and ordered.remove("DT")
+    "PF" in ordered and ordered.remove("SD")
+
+    return "+%s" % "".join(ordered) if ordered else "Nomod"
+
+
+
+def parse_map_data(map_id):
+	response = requests.get(API + "get_beatmaps?k=" + KEY + "&b=" + map_id)
+	return response.json()[0]

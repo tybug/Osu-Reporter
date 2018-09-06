@@ -67,8 +67,8 @@ def process_submission(submission):
 
 
 	# only add to db if it's not already there
-	if(not user_exists(player_data["user_id"])):
-		add_user(player_data["user_id"], submission.id, submission.created_utc)
+	if(not user_exists(player_data[0]["user_id"])):
+		add_user(player_data[0]["user_id"], submission.id, submission.created_utc)
 
 
 
