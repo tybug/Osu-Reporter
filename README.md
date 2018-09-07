@@ -8,4 +8,4 @@ A reddit bot to automate housekeeping tasks on r/osureport
 * Checks on intervals and flairs posts as resolved if the user reported was banned
 
 ## Contact
-If you have any issues, feedback, or comments on the bot you can contact me by replying to one of the bot's comments or PMing it, as all messages to it are forwarded to me. 
+If you have any issues, feedback, or comments on the bot you can contact me by replying to one of the bot's comments or PMing it. All messages to it are forwarded to me. 
