@@ -2,7 +2,7 @@ import praw
 from config import *
 import secret
 import re
-from parser import parse_flair_data, parse_user_data, parse_gamemode, create_reply
+from parser import *
 from db import *
 import threading
 import datetime
@@ -57,10 +57,10 @@ def process_submission(submission):
 
 
 
-	player_data = parse_user_data(player, gamemode)
+	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
-			submission.reply(REPLY_ALREADY_BANNED + REPLY_INFO)
+			submission.reply(REPLY_ALREADY_BANNED.format(USERS + player_data[0]["user_id"]) + REPLY_INFO)
 		return
 	# Leave info table comment
 	submission.reply(create_reply(player_data))
@@ -88,7 +88,7 @@ def check_banned():
 			return
 
 
-		user_data = parse_user_data(id, "0") # gamemode doesn't matter here since we're just checking for empty response
+		user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
 
 		if(user_data is None): # user was restricted
 			remove_user(id)

@@ -37,7 +37,7 @@ REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you fo
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
 					", and repost with a correctly formatted title.")
 # if the reported user's page gives 404 at time of report
-REPLY_ALREADY_BANNED = ("The user you reported is already restricted, or doesn't exist!")
+REPLY_ALREADY_BANNED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 
 
 # Parse Config

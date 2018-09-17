@@ -22,17 +22,17 @@ def parse_gamemode(input):
 
 
 
-def parse_user_data(username, mode):
+def parse_user_data(username, mode, type):
 	'''
 	Returns a list consisting of the json response the osu api gives us when querying data for the given user in the given mode
 	'''
 
-	response = requests.get(API + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode)
+	response = requests.get(API + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
 	user_data = response.json()
 	if(not user_data): # empty response (user banned / doesn't exist)
 		return
 
-	response = requests.get(API + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode)
+	response = requests.get(API + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
 	top_data = response.json()
 
 	return [user_data[0], top_data] # we could remove extraneous data here...but honestly it's so low volume anyway
@@ -64,9 +64,9 @@ def create_reply(data):
 	user_data = data[0]
 	top_data = data[1]
 	reply = ("{}'s profile: {}\n\n"
-			"| Rank | PP | Playcount |\n"
-			":-:|:-:|:-:\n"
-			"| #{:,} | {:,} | {:,} |\n\n"
+			"| Rank | PP | Playtime | Playcount |\n"
+			":-:|:-:|:-:|:-:\n"
+			"| #{:,} | {:,} | {} hours | {:,} |\n\n"
 			"| Top Plays | Mods | PP | Date |\n"
 			":-:|:-:|:-:|:-:|:-:\n"
 			.format(
@@ -74,7 +74,9 @@ def create_reply(data):
 					USERS + user_data["user_id"],
 					int(user_data["pp_rank"]),
 					round(float(user_data["pp_raw"])),
+					round(int(user_data["total_seconds_played"]) / 60 / 60), # convert to hours
 					int(user_data["playcount"])
+
 			))
 
 
