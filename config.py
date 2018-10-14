@@ -5,6 +5,7 @@ API = "https://osu.ppy.sh/api/"
 USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 2 # stop checking threads for invalid after they're 2 days old
+TOP_PLAY_LIMIt = 5 # how many top plays to provide pp data for
 
 # include alternate names for gamemodes (or common mispellings)
 GAMEMODES = {

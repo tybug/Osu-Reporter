@@ -27,7 +27,7 @@ def main():
 def process_submission(submission):
 	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
 		return
-	print("Processing submission {}".format(submission.permalink))
+	print("Processing submission https://old.reddit.com{}".format(submission.permalink))
 	add_submission(submission.id)
 
 
@@ -53,7 +53,8 @@ def process_submission(submission):
 	# Flair it
 	flair_data = parse_flair_data(offense)
 	if(flair_data):
-		submission.mod.flair(flair_data[0], flair_data[1])
+		if(submission.link_flair_text != "Resolved"): # don't overwrite resolved flairs
+			submission.mod.flair(flair_data[0], flair_data[1])
 
 
 	if([i for i in title_data if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
