@@ -60,7 +60,7 @@ def process_submission(submission):
 	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
-			submission.reply(REPLY_ALREADY_BANNED.format(USERS + player_data[0]["user_id"]) + REPLY_INFO)
+			submission.reply(REPLY_ALREADY_BANNED.format(USERS + player) + REPLY_INFO)
 		return
 	# Leave info table comment
 	submission.reply(create_reply(player_data))
