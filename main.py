@@ -27,7 +27,7 @@ def main():
 def process_submission(submission):
 	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
 		return
-
+	print("Processing submission {}".format(submission.permalink))
 	add_submission(submission.id)
 
 
@@ -56,15 +56,17 @@ def process_submission(submission):
 		submission.mod.flair(flair_data[0], flair_data[1])
 
 
-
+	if([i for i in title_data if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
+		print("Would have processed {} further, but it contained blacklisted words".format(submission.permalink))
+		return
+	
 	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
 			submission.reply(REPLY_ALREADY_BANNED.format(USERS + player) + REPLY_INFO)
 		return
-	# Leave info table comment
-	submission.reply(create_reply(player_data))
 
+	submission.reply(create_reply(player_data))
 
 	# only add to db if it's not already there
 	if(not user_exists(player_data[0]["user_id"])):
@@ -93,6 +95,7 @@ def check_banned():
 		if(user_data is None): # user was restricted
 			remove_user(id)
 			post = praw.Submission(reddit, post_id) # get praw post from id to flair
+			print("Flairing {} as resolved".format(post.permalink))
 			post.mod.flair("Resolved", "resolved")
 
 

@@ -23,6 +23,8 @@ FLAIRS = {
 		  "cheating": ["cheating", "cheater", "Cheating"]
 		 }
 
+REPLY_IGNORE = ["megathread", "discussion", "mega thread"] # don't comment if the title contains these
+
 # If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
 DEFAULT_TO_CHEATING = False
 CHECK_INTERVAL = 900 # Check for banned users every 15 minutes (900 seconds)
