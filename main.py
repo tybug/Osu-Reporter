@@ -42,7 +42,7 @@ def process_submission(submission):
 	title_data = re.split(TITLE_SPLIT, title)
 	if(len(title_data) < 3): 
 		if(REPLY_MALFORMAT_COMMENT):
-			submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
+			# submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
 
 
@@ -53,7 +53,9 @@ def process_submission(submission):
 	# Flair it
 	flair_data = parse_flair_data(offense)
 	if(flair_data):
-		if(submission.link_flair_text != "Resolved"): # don't overwrite resolved flairs
+		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
+			print("I would have flaired {} as {}, but it was already resolved".format(submission.permalink, flair_data[0]))
+		else:
 			submission.mod.flair(flair_data[0], flair_data[1])
 
 
@@ -64,10 +66,10 @@ def process_submission(submission):
 	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
-			submission.reply(REPLY_ALREADY_BANNED.format(USERS + player) + REPLY_INFO)
+			# submission.reply(REPLY_ALREADY_BANNED.format(USERS + player) + REPLY_INFO)
 		return
 
-	submission.reply(create_reply(player_data))
+	# submission.reply(create_reply(player_data))
 
 	# only add to db if it's not already there
 	if(not user_exists(player_data[0]["user_id"])):
