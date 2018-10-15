@@ -68,6 +68,7 @@ def process_submission(submission):
 	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
 		if(REPLY_ALREADY_BANNED):
 			# submission.reply(REPLY_ALREADY_BANNED.format(USERS + player) + REPLY_INFO)
+			pass
 		return
 
 	# submission.reply(create_reply(player_data))
