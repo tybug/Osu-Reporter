@@ -3,6 +3,7 @@ secret.py
 db.db
 .DS_Store
 .vscode/settings.json
+log.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
