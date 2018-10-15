@@ -80,6 +80,7 @@ def process_submission(submission):
 
 
 def check_banned():
+	print("Checking for banned users...")
 	threading.Timer(CHECK_INTERVAL, check_banned).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
 
 	for data in get_all_users():
