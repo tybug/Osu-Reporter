@@ -21,6 +21,7 @@ def main():
 
 	# Iterate over every new submission
 	for submission in subreddit.stream.submissions():
+		print(submission.id)
 		process_submission(submission)
 
 
