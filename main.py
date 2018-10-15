@@ -43,6 +43,7 @@ def process_submission(submission):
 	if(len(title_data) < 3): 
 		if(REPLY_MALFORMAT_COMMENT):
 			# submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
+			pass
 		return
 
 
