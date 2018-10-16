@@ -15,7 +15,6 @@ reddit = praw.Reddit(client_id=secret.ID,
                      password=secret.PASSWORD)
 
 def main():
-
 	subreddit = reddit.subreddit(SUB)
 	check_banned() # automatically repeats on interval
 
@@ -98,7 +97,7 @@ def check_banned():
 
 		if(user_data is None): # user was restricted
 			remove_user(id)
-			post = praw.Submission(reddit, post_id) # get praw post from id to flair
+			post = praw.models.Submission(reddit, post_id) # get praw post from id to flair
 			print("Flairing {} as resolved".format(post.permalink))
 			post.mod.flair("Resolved", "resolved")
 
