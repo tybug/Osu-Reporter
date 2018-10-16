@@ -58,10 +58,11 @@ def main():
 
 def process_submission(submission):
 	link = "https://old.reddit.com" + submission.permalink
-	log.info("Processing submission %s", link)
 	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
 		log.debug("Submission %s is already processed", submission.id)
 		return
+
+	log.info("Processing submission %s", link)
 	log.debug("Adding post %s to db", submission.id)
 	add_submission(submission.id)
 
