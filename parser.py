@@ -80,7 +80,7 @@ def create_reply(data):
 			))
 
 
-	for play in top_data[0:TOP_PLAY_LIMIt]:
+	for play in top_data[0:TOP_PLAY_LIMIT]:
 		reply += ("| {} | {} | {:,} | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],

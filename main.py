@@ -6,13 +6,44 @@ from parser import *
 from db import *
 import threading
 import datetime
+import argparse
+import logging as log
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
+parser.add_argument("-f", "--flair", help="leaves flairs unmodified", action="store_true")
+
+g = parser.add_mutually_exclusive_group()
+g.add_argument("-v", "--verbose", help="enables detailed logging", action="store_true")
+g.add_argument("-s", "--silent", help="disables all logging", action="store_true")
+
+args = parser.parse_args()
+
+log_level = 20 # INFO
+if args.verbose:
+	log_level = 10 # DEBUG
+
+log.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p', level=log_level)
+
+# Disable annoying html logging
+log.getLogger("requests").setLevel(log.WARNING)
+log.getLogger("urllib3").setLevel(log.WARNING)
+log.getLogger("prawcore").setLevel(log.WARNING)
+
+
+if(args.silent):
+	log.disable()
+
+
+log.info("Logging into reddit")
 # keep reddit global
 reddit = praw.Reddit(client_id=secret.ID,
                      client_secret=secret.SECRET,
                      user_agent="python:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
+log.info("Login successful")
+
 
 def main():
 	subreddit = reddit.subreddit(SUB)
@@ -23,10 +54,15 @@ def main():
 		process_submission(submission)
 
 
+
+
 def process_submission(submission):
+	link = "https://old.reddit.com" + submission.permalink
+	log.info("Processing submission %s", link)
 	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
+		log.debug("Submission %s is already processed", submission.id)
 		return
-	print("Processing submission https://old.reddit.com{}".format(submission.permalink))
+	log.debug("Adding post %s to db", submission.id)
 	add_submission(submission.id)
 
 
@@ -53,35 +89,39 @@ def process_submission(submission):
 	flair_data = parse_flair_data(offense)
 	if(flair_data):
 		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
-			print("I would have flaired {} as {}, but it was already resolved".format(submission.permalink, flair_data[0]))
+			log.debug("Neglecting to flair %s as %s, it is already flaired resolved", submission.permalink, flair_data[0])
 		else:
 			submission.mod.flair(flair_data[0], flair_data[1])
 
 
 	if([i for i in title_data if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
-		print("Would have processed {} further, but it contained blacklisted words".format(submission.permalink))
+		log.debug("Not processing %s further; the title contained blacklisted discussion words", link)
 		return
 	
 	player_data = parse_user_data(player, gamemode, "string")
-	if(player_data is None): # api gives empty json - possible misspelling or user was already banned
-		if(REPLY_ALREADY_BANNED):
-			submission.reply(REPLY_ALREADY_BANNED.format(USERS + player) + REPLY_INFO)
+	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
+		log.debug("User with name %s was already restricted at the time of submission", player)
+		if(REPLY_ALREADY_RESTRICTED):
+			log.debug("Leaving already banned comment")
+			submission.reply(REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
 		return
 
+	log.debug("Replying with data for %s", player)
 	submission.reply(create_reply(player_data))
 
 	# only add to db if it's not already there
 	if(not user_exists(player_data[0]["user_id"])):
+		log.debug("Adding user with name %s and id %s to db to track potential future restriction", player, player_data[0]["user_id"])
 		add_user(player_data[0]["user_id"], submission.id, submission.created_utc)
 
 
 
 def check_banned():
-	print("Checking for banned users...")
+	log.info("Checking for banned users..")
 	threading.Timer(CHECK_INTERVAL, check_banned).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
 
 	for data in get_all_users():
-
+		log.debug("Checking if user %s is banned", data[0])
 		id = data[0] # user id
 		post_id = data[1] # post id
 		post_date = data[2] # post submission date
@@ -89,6 +129,7 @@ def check_banned():
 		post_date = int(float(post_date))
 		difference = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(post_date)
 		if(difference.total_seconds() > LIMIT_DAYS * 24 * 60 * 60): # compare seconds
+			log.info("Removing user %s from database, over time limit", id)
 			remove_user(id)
 			return
 
@@ -96,17 +137,20 @@ def check_banned():
 		user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
 
 		if(user_data is None): # user was restricted
+			log.info("Removing user %s from database, user restricted", id)
 			remove_user(id)
 			post = praw.models.Submission(reddit, post_id) # get praw post from id to flair
-			print("Flairing {} as resolved".format(post.permalink))
+			log.info("Flairing post %s as resolved", post.permalink)
 			post.mod.flair("Resolved", "resolved")
 
 
 	# Might as well forward pms here...already have an automated function, why not?
 	for message in reddit.inbox.unread():		
-		reddit.redditor(AUTHOR).message("REPLY to Report Bot FROM u/{}".format(message.author), message.body)
+		log.info("Forwarding message by %s to %s", message.author, AUTHOR)
+		reddit.redditor(AUTHOR).message("Forwarding message to me from u/{}".format(message.author), message.body)
 		message.mark_read()
 
 
+
 if __name__ == "__main__":
-    main()
+	main()
