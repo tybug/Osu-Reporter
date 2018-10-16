@@ -118,11 +118,11 @@ def process_submission(submission):
 
 
 def check_banned():
-	log.info("Checking for banned users..")
+	log.info("Checking for restricted users..")
 	threading.Timer(CHECK_INTERVAL, check_banned).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
 
 	for data in get_all_users():
-		log.debug("Checking if user %s is banned", data[0])
+		log.debug("Checking if user %s is restricted", data[0])
 		id = data[0] # user id
 		post_id = data[1] # post id
 		post_date = data[2] # post submission date
