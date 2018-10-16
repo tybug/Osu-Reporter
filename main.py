@@ -23,7 +23,7 @@ log_level = 20 # INFO
 if args.verbose:
 	log_level = 10 # DEBUG
 
-log.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p', level=log_level)
+log.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p', level=log_level)
 
 # Disable annoying html logging
 log.getLogger("requests").setLevel(log.WARNING)
