@@ -25,7 +25,7 @@ if args.verbose:
 
 log.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p', level=log_level)
 
-# Disable annoying html logging
+# Disable annoying html request logging
 log.getLogger("requests").setLevel(log.WARNING)
 log.getLogger("urllib3").setLevel(log.WARNING)
 log.getLogger("prawcore").setLevel(log.WARNING)
@@ -51,12 +51,12 @@ def main():
 
 	# Iterate over every new submission
 	for submission in subreddit.stream.submissions():
-		process_submission(submission)
+		process_submission(submission, not args.comment, not args.flair)
 
 
 
 
-def process_submission(submission):
+def process_submission(submission, shouldComment, shouldFlair):
 	link = "https://old.reddit.com" + submission.permalink
 	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
 		log.debug("Submission %s is already processed", submission.id)
@@ -77,7 +77,7 @@ def process_submission(submission):
 
 	title_data = re.split(TITLE_SPLIT, title)
 	if(len(title_data) < 3): 
-		if(REPLY_MALFORMAT_COMMENT):
+		if(REPLY_MALFORMAT_COMMENT and shouldComment):
 			submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
 
@@ -91,7 +91,7 @@ def process_submission(submission):
 	if(flair_data):
 		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
 			log.debug("Neglecting to flair %s as %s, it is already flaired resolved", submission.permalink, flair_data[0])
-		else:
+		elif shouldFlair:
 			submission.mod.flair(flair_data[0], flair_data[1])
 
 
@@ -102,13 +102,14 @@ def process_submission(submission):
 	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
 		log.debug("User with name %s was already restricted at the time of submission", player)
-		if(REPLY_ALREADY_RESTRICTED):
+		if(REPLY_ALREADY_RESTRICTED and shouldComment):
 			log.debug("Leaving already banned comment")
 			submission.reply(REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
 		return
 
 	log.debug("Replying with data for %s", player)
-	submission.reply(create_reply(player_data))
+	if shouldComment:
+		submission.reply(create_reply(player_data))
 
 	# only add to db if it's not already there
 	if(not user_exists(player_data[0]["user_id"])):
@@ -142,7 +143,8 @@ def check_banned():
 			remove_user(id)
 			post = praw.models.Submission(reddit, post_id) # get praw post from id to flair
 			log.info("Flairing post %s as resolved", post.permalink)
-			post.mod.flair("Resolved", "resolved")
+			if(shouldFlair):
+				post.mod.flair("Resolved", "resolved")
 
 
 	# Might as well forward pms here...already have an automated function, why not?
