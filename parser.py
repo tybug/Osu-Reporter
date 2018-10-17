@@ -87,7 +87,7 @@ def create_reply(data):
 				 		  parse_mods(int(play["enabled_mods"])),
 				 		  round(float(play["pp"])),
 						  calculate_acc(play),
-						  play["rank"],
+						  parse_play_rank(play["rank"]),
 				 		  play["date"].split(" ")[0].replace("-", "/")
 				 ))
 
@@ -95,6 +95,9 @@ def create_reply(data):
 	return (reply + REPLY_INFO)
 
 
+def parse_play_rank(rank):
+	ranks = {"XS": "SS", "XH" : "SS"}
+	return ranks[rank] if rank in ranks else rank
 
 def calculate_acc(play):
 	"""
