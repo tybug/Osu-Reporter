@@ -81,7 +81,7 @@ def create_reply(data):
 
 
 	for play in top_data[0:TOP_PLAY_LIMIT]:
-		reply += ("| {} | {} | {:,} | {} | {} |\n"
+		reply += ("| {} | {} | {:,} | {:.2f} | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
 				 		  parse_mods(int(play["enabled_mods"])),
