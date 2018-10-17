@@ -81,12 +81,13 @@ def create_reply(data):
 
 
 	for play in top_data[0:TOP_PLAY_LIMIT]:
-		reply += ("| {} | {} | {:,} | {:.2f}% | {} |\n"
+		reply += ("| {} | {} | {:,} | {:.2f}% ({}) | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
 				 		  parse_mods(int(play["enabled_mods"])),
 				 		  round(float(play["pp"])),
 						  calculate_acc(play),
+						  play["rank"],
 				 		  play["date"].split(" ")[0].replace("-", "/")
 				 ))
 
