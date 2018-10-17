@@ -67,7 +67,7 @@ def create_reply(data):
 			"| Rank | PP | Playtime | Playcount |\n"
 			":-:|:-:|:-:|:-:\n"
 			"| #{:,} | {:,} | {} hours | {:,} |\n\n"
-			"| Top Plays | Mods | PP | Date |\n"
+			"| Top Plays | Mods | PP | Accuracy | Date |\n"
 			":-:|:-:|:-:|:-:|:-:\n"
 			.format(
 					user_data["username"],
@@ -81,11 +81,12 @@ def create_reply(data):
 
 
 	for play in top_data[0:TOP_PLAY_LIMIT]:
-		reply += ("| {} | {} | {:,} | {} |\n"
+		reply += ("| {} | {} | {:,} | {} | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
 				 		  parse_mods(int(play["enabled_mods"])),
 				 		  round(float(play["pp"])),
+						  calculate_acc(play),
 				 		  play["date"].split(" ")[0].replace("-", "/")
 				 ))
 
@@ -93,6 +94,20 @@ def create_reply(data):
 	return (reply + REPLY_INFO)
 
 
+
+def calculate_acc(play):
+	"""
+	Calculates the accuracy of the given play based on the forumla (currently) in https://osu.ppy.sh/help/wiki/Accuracy. 
+	Accepts data in the format of a play from get_user_best, get_user_recent, get_scores (for a specific beatmap) or individual plays from get_match
+	"""
+	
+	count0 = int(play["countmiss"])
+	count50 = int(play["count50"])
+	count100 = int(play["count100"])
+	count300 = int(play["count300"])
+
+	acc = (50*count50+ 100*count100 + 300*count300) / (300 * count0 * count50 * count100 * count300)
+	return acc
 
 def parse_mods(mods_int):
     """
