@@ -81,7 +81,7 @@ def create_reply(data):
 
 
 	for play in top_data[0:TOP_PLAY_LIMIT]:
-		reply += ("| {} | {} | {:,} | {:.2f} | {} |\n"
+		reply += ("| {} | {} | {:,} | {:.2f}% | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
 				 		  parse_mods(int(play["enabled_mods"])),
@@ -107,7 +107,7 @@ def calculate_acc(play):
 	count300 = int(play["count300"])
 
 	acc = (50*count50+ 100*count100 + 300*count300) / (300 * (count0 + count50 + count100 + count300))
-	return acc
+	return acc * 100 # convert to percent
 
 
 
