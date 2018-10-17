@@ -106,8 +106,7 @@ def calculate_acc(play):
 	count100 = int(play["count100"])
 	count300 = int(play["count300"])
 
-	denom = (300 * count0 * count50 * count100 * count300)
-	acc = (50*count50+ 100*count100 + 300*count300) / denom if denom != 0 else 100
+	acc = (50*count50+ 100*count100 + 300*count300) / (300 * (count0 + count50 + count100 + count300))
 	return acc
 
 
