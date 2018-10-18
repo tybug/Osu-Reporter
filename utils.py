@@ -1,4 +1,4 @@
-from config.py import *
+from config import *
 
 def calc_acc(play, mode):
     """
