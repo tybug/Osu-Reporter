@@ -1,3 +1,5 @@
+from config.py import *
+
 def calc_acc(play, mode):
     """
     Calculates the accuracy of the given play based on the forumla (currently) in https://osu.ppy.sh/help/wiki/Accuracy. 
