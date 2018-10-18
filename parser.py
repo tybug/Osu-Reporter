@@ -96,7 +96,7 @@ def create_reply(data):
 
 
 def parse_play_rank(rank):
-	ranks = {"X": "SS", "XH" : "SS"}
+	ranks = {"X": "SS", "XH" : "SS", "SH" : "S"}
 	return ranks[rank] if rank in ranks else rank
 
 def calculate_acc(play):
