@@ -72,7 +72,7 @@ def create_reply(data, mode):
 			":-:|:-:|:-:|:-:|:-:\n"
 			.format(
 					user_data["username"],
-					USERS + user_data["user_id"] + "/" + modes[mode],
+					USERS + user_data["user_id"] + "/" + modes[int(mode)],
 					int(user_data["pp_rank"]),
 					round(float(user_data["pp_raw"])),
 					round(int(user_data["total_seconds_played"]) / 60 / 60), # convert to hours
