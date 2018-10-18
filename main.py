@@ -47,7 +47,7 @@ log.info("Login successful")
 
 def main():
 	subreddit = reddit.subreddit(SUB)
-	check_banned() # automatically repeats on interval
+	check_banned(not args.flair) # automatically repeats on interval
 
 	# Iterate over every new submission
 	for submission in subreddit.stream.submissions():
@@ -118,9 +118,9 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 
-def check_banned():
+def check_banned(shouldFlair):
 	log.info("Checking for restricted users..")
-	threading.Timer(CHECK_INTERVAL, check_banned).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
+	threading.Timer(CHECK_INTERVAL, check_banned, [shouldFlair]).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
 
 	for data in get_all_users():
 		log.debug("Checking if user %s is restricted", data[0])
