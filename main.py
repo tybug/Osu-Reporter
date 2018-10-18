@@ -67,24 +67,23 @@ def process_submission(submission, shouldComment, shouldFlair):
 	add_submission(submission.id)
 
 
-	title = submission.title
-	for strip in TITLE_STRIP:
-		# Escape for regex
-		if(strip in ESCAPE_REQUIRED):
-			strip = "\\" + strip
-		title = re.sub(strip, "", title)
-
-
-	title_data = re.split(TITLE_SPLIT, title)
-	if(len(title_data) < 3): 
+	title = submission.title.lower()
+	log.debug("Lowered title: %s", title)
+	
+	title_data = TITLE_MATCH.match(title)
+	if(not title_data): # regex didn't match
+		log.debug("Replying malformatted to post %s", submission.id)
 		if(REPLY_MALFORMAT_COMMENT and shouldComment):
 			submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
 
 
-	gamemode = parse_gamemode(title_data[0])
-	player = title_data[1]
-	offense = title_data[2]
+	gamemode = parse_gamemode(title_data.group(1))
+	info = title_data.group(2).split("|", 1) # only split once
+	player = info[0].strip() # take from gamemode to first pipe, remove leading + trailing spaces
+	offense = info[-1] # the last occurence. Identical to info[1] usually, 
+					   # but when there's no more pipes (ie title is "[osu!std] tybug") info[1] will throw IOOB
+	log.debug("Gamemode, player, offense: [%s, %s, %s]", gamemode, player, offense)
 
 	# Flair it
 	flair_data = parse_flair_data(offense)
@@ -95,10 +94,11 @@ def process_submission(submission, shouldComment, shouldFlair):
 			submission.mod.flair(flair_data[0], flair_data[1])
 
 
-	if([i for i in title_data if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
+	if([i for i in title_data.groups() if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
 		log.debug("Not processing %s further; the title contained blacklisted discussion words", link)
 		return
 	
+
 	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
 		log.debug("User with name %s was already restricted at the time of submission", player)
@@ -107,9 +107,10 @@ def process_submission(submission, shouldComment, shouldFlair):
 			submission.reply(REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
 		return
 
+
 	log.debug("Replying with data for %s", player)
 	if shouldComment:
-		submission.reply(create_reply(player_data))
+		submission.reply(create_reply(player_data, gamemode))
 
 	# only add to db if it's not already there
 	if(not user_exists(player_data[0]["user_id"])):
@@ -120,7 +121,8 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 def check_banned(shouldFlair):
 	log.info("Checking for restricted users..")
-	threading.Timer(CHECK_INTERVAL, check_banned, [shouldFlair]).start() # Calls this function after x seconds, which calls itself. Cheap way to check for banned users on an interval
+	threading.Timer(CHECK_INTERVAL, check_banned, [shouldFlair]).start() # Calls this function after x seconds, which calls itself. 
+																		 # Cheap way to check for banned users on an interval
 
 	for data in get_all_users():
 		log.debug("Checking if user %s is restricted", data[0])
@@ -149,6 +151,8 @@ def check_banned(shouldFlair):
 
 	# Might as well forward pms here...already have an automated function, why not?
 	for message in reddit.inbox.unread():		
+		if(message.author == AUTHOR):
+			log.debug("Not forwarding message by AUTHOR (%s)", AUTHOR)
 		log.info("Forwarding message by %s to %s", message.author, AUTHOR)
 		reddit.redditor(AUTHOR).message("Forwarding message to me from u/{}".format(message.author), message.body)
 		message.mark_read()

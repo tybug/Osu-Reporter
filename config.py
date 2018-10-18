@@ -1,3 +1,5 @@
+import re
+
 # General Config
 DB = "db.db" # relative path to database
 SUB = 'osureport' # listen for submissions to this sub
@@ -14,6 +16,7 @@ GAMEMODES = {
 			 "3": ["mania", "m"], 
 			 "2": ["catch", "ctb", "fruits", "c"]
 			 }
+             
 # css class : [possible matches, ..., ..., flair title]
 # Don't bother accounting for meta or other, hard to parse
 # Prioritizes flair types higher in the list - if a title contains both "discussion" and "multiacc", it will be flaired as "discussion"
@@ -24,7 +27,7 @@ FLAIRS = {
 		  "cheating": ["cheating", "cheater", "Cheating"]
 		 }
 
-REPLY_IGNORE = ["megathread", "discussion", "mega thread"] # don't comment if the title contains these
+REPLY_IGNORE = ["megathread", "discussion", "mega thread", "multiple"] # don't comment if the title contains these
 
 # If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
 DEFAULT_TO_CHEATING = False
@@ -39,17 +42,12 @@ REPLY_INFO = ("\n\n***\n\n"
 REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
 					", and repost with a correctly formatted title.")
-# if the reported user's page gives 404 at time of report
+# if the reported user's page gives not found at time of report
 REPLY_ALREADY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 
 
 # Parse Config
-ESCAPE_REQUIRED = ["|", ".", "["] # regex wants escape characters for these
-TITLE_STRIP = ["|", "[", "]"] # strip before parsing title, could want to add fancy brackets people use for instance, or if you ever change title formatting
-TITLE_SPLIT = "\s+" # split on this regex
-GAMEMODE_STRIP = ["osu!", "o!"] # strip before parsing gamemode
-FLAIR_SPLIT = "/\s+" # split for flair word search on this regex
-
+TITLE_MATCH = re.compile("\[(?:osu|o)!(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c)](.*)")
 
 
 # Full credit for these two to Christoper (https://github.com/christopher-dG/osu-bot)
