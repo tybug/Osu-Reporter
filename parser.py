@@ -2,7 +2,7 @@ from config import *
 import re
 import requests
 from secret import KEY
-import utils
+from utils import *
 
 def parse_gamemode(input):
 	'''
