@@ -3,6 +3,7 @@ import re
 import requests
 from secret import KEY
 from utils import *
+import logging as log
 
 def parse_gamemode(input):
 	'''
@@ -43,7 +44,7 @@ def parse_flair_data(offense):
 	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
 	'''
 
-	offense = re.split("/\s+", offense) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
+	offense = re.split("\s+|/", offense) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
 	for flair in FLAIRS:
 		if([i for i in offense if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
 			return [FLAIRS[flair][-1], flair]
@@ -52,6 +53,27 @@ def parse_flair_data(offense):
 		return ["cheating", "Cheating"]
 
 
+def parse_offense_type(offense):
+	'''
+	Determines the type of offense contained in the passed string (title).
+	Returns a list containing the offense at index 0 and whether it was a blatant report or not in index 1 
+	(whether the title contained anything in BLATANT)
+	'''
+	offense = re.split("\s+|/", offense)
+	log.debug("offense split: %s", offense)
+	data = ["other"]
+	for offense_type in OFFENSES:
+		log.debug("checking offense against %s", OFFENSES[offense_type])
+		if([i for i in offense if i in OFFENSES[offense_type]]):
+			data[0] = offense_type
+			break
+
+	if([i for i in offense if i in BLATANT]): # if element of offense is in blatant
+		data.append("true")
+	else:
+		data.append("false")
+
+	return data
 
 
 def create_reply(data, mode):

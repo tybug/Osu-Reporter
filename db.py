@@ -24,10 +24,10 @@ def submission_exists(id):
 
 # Users
 
-def add_user(id, post, date):
+def add_user(id, post, date, offense_type, blatant, reportee):
 	c = sqlite3.connect(DB)
-	data = [id, post, date]
-	c.execute("INSERT INTO users VALUES(?, ?, ?)", data)
+	data = [id, post, date, offense_type, blatant, reportee]
+	c.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?)", data)
 	c.commit()
 	c.close()
 
@@ -51,9 +51,19 @@ def user_exists(id):
 
 def get_all_users():
 	c = sqlite3.connect(DB)
-	ret = []
+	users = []
 	for row in c.execute("SELECT * FROM users"):
-		ret.append(row)
+		users.append(row)
 
-	return ret
+	return users
 
+
+
+# Stats
+
+def add_stat(user, post, reported_utc, restricted_utc, offense_type, blatant, reportee):
+	c = sqlite3.connect(DB)
+	data = [user, post, reported_utc, restricted_utc, offense_type, blatant, reportee]
+	c.execute("INSERT INTO stats VALUES(?, ?, ?, ?, ?, ?, ?)", data)
+	c.commit()
+	c.close()

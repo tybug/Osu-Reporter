@@ -27,6 +27,17 @@ FLAIRS = {
 		  "cheating": ["cheating", "cheater", "Cheating"]
 		 }
 
+
+# for parsing offense type
+OFFENSES = {
+            "multi": ["multi", "multiacc", "multi-account", "multiaccount"],
+            "spinhack": ["spinhack", "spin", "spin-hack"],
+            "replay editing": ["editing", "replay", "stealing", "steal"],
+            "relax": ["relax", "ur", "cv"]
+            }
+BLATANT = ["blatant", "blat", "obvious"]
+
+
 REPLY_IGNORE = ["megathread", "discussion", "mega thread", "multiple"] # don't comment if the title contains these
 
 # If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
