@@ -69,7 +69,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 		log.debug("Submission %s is already processed", submission.id)
 		return
 
-	log.info("")
+	log.debug("")
 	log.info("Processing submission %s", link)
 	log.debug("Adding post %s to db", submission.id)
 	add_submission(submission.id)
@@ -138,7 +138,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 def check_banned(shouldFlair):
-	log.info("")
+	log.debug("")
 	log.info("Checking for restricted users..")
 	threading.Timer(CHECK_INTERVAL, check_banned, [shouldFlair]).start() # Calls this function after x seconds, which calls itself. 
 																		 # Cheap way to check for banned users on an interval
@@ -159,8 +159,7 @@ def check_banned(shouldFlair):
 			log.debug("Adding not-restricted statistic for user %s on post %s, reported at %s, restricted at %s, reported for %s, blatant? %s, reported by %s",
 				 			id, post_id, post_date, "n/a", offense_type, blatant, reportee)
 			add_stat(id, post_id, post_date, "n/a", offense_type, blatant, reportee)
-			add_stat
-			return
+			continue
 
 
 		user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
@@ -184,6 +183,8 @@ def check_banned(shouldFlair):
 		log.info("Forwarding message by %s to %s", message.author, AUTHOR)
 		reddit.redditor(AUTHOR).message("Forwarding message from u/{}".format(message.author), message.body)
 		message.mark_read()
+
+	log.info("..done")
 
 
 
