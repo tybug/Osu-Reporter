@@ -20,7 +20,7 @@ def calc_acc(play, mode):
     elif(mode == "2"): # ctb
         acc = (count50 + count100 + count300) / (count0 + countkatu + count50 + count100 + count300)
     elif(mode == "3"): # mania
-        acc = (50*count50 + 100*count100 + 200*countkatu + 300*(count300 + countgeki) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
+        acc = (50*count50 + 100*count100 + 200*countkatu + 300*(count300 + countgeki)) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
 
     return acc * 100 # convert to percent
 
