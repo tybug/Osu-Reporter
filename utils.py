@@ -10,15 +10,17 @@ def calc_acc(play, mode):
     count50 = int(play["count50"])
     count100 = int(play["count100"])
     count300 = int(play["count300"])
+    countkatu = int(play["countkatu"])
+    countgeki = int(play["countgeki"])
 
     if(mode == "0"): # std
         acc = (50*count50+ 100*count100 + 300*count300) / (300 * (count0 + count50 + count100 + count300))
     elif(mode == "1"): # taiko
-        acc = (0.5*count100 + count300) / (countmiss + count100 + count300)
+        acc = (0.5*count100 + count300) / (count0 + count100 + count300)
     elif(mode == "2"): # ctb
-        acc = (count50 + count100 + count300) / (int(play["countkatu"]))
+        acc = (count50 + count100 + count300) / (count0 + countkatu + count50 + count100 + count300)
     elif(mode == "3"): # mania
-        acc = (50*count50 + 100*count100 + 300*count300)
+        acc = (50*count50 + 100*count100 + 200*countkatu + 300*(count300 + countgeki) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
 
     return acc * 100 # convert to percent
 
