@@ -8,6 +8,7 @@ import threading
 import datetime
 import argparse
 import logging as log
+import time
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
@@ -172,9 +173,9 @@ def check_banned(shouldFlair):
 			if(shouldFlair):
 				post.mod.flair("Resolved", "resolved")																						
 				log.debug("Adding restricted statistic for user %s on post %s, reported at %s, restricted at %s, reported for %s, blatant? %s, reported by %s",
-				 			id, post_id, post_date, datetime.datetime.utcnow(), offense_type, blatant, reportee)
+				 			id, post_id, post_date, time.time(), offense_type, blatant, reportee)
 												# current utc time
-				add_stat(id, post_id, post_date, datetime.datetime.utcnow(), offense_type, blatant, reportee)
+				add_stat(id, post_id, post_date, time.time(), offense_type, blatant, reportee)
 
 	# Might as well forward pms here...already have an automated function, why not?
 	for message in reddit.inbox.unread():		
