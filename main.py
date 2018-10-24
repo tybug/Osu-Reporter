@@ -9,6 +9,7 @@ import datetime
 import argparse
 import logging as log
 import time
+from prawcore.exceptions import RequestException
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
@@ -58,10 +59,12 @@ def main():
 	check_banned(not args.flair) # automatically repeats on interval
 
 	# Iterate over every new submission
-	for submission in subreddit.stream.submissions():
-		process_submission(submission, not args.comment, not args.flair)
-
-
+	try:
+		for submission in subreddit.stream.submissions():
+			process_submission(submission, not args.comment, not args.flair)
+	except RequestException as e:
+		log.warning("Request exception while listening to submission stream (%s). Waiting 10 seconds and retrying", str(e))
+		time.sleep(10)
 
 
 def process_submission(submission, shouldComment, shouldFlair):
