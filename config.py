@@ -56,6 +56,8 @@ REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you fo
 # if the reported user's page gives not found at time of report
 REPLY_ALREADY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 
+# if comments by the bot should be stickied
+STICKY = True
 
 # Parse Config
 TITLE_MATCH = re.compile("\[(?:osu|o)!(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c)](.*)")

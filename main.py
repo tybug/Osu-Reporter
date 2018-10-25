@@ -86,7 +86,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 	if(not title_data): # regex didn't match
 		log.debug("Replying malformatted to post %s", submission.id)
 		if(REPLY_MALFORMAT_COMMENT and shouldComment):
-			submission.reply(REPLY_MALFORMAT_COMMENT + REPLY_INFO)
+			reply(submission, REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
 
 
@@ -119,14 +119,14 @@ def process_submission(submission, shouldComment, shouldFlair):
 		log.debug("User with name %s was already restricted at the time of submission, not processing further", player)
 		if(REPLY_ALREADY_RESTRICTED and shouldComment):
 			log.debug("Leaving already banned comment")
-			submission.reply(REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
+			reply(submission, REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
 		return
 
 
 
 	log.debug("Replying with data for %s", player)
 	if shouldComment:
-		submission.reply(create_reply(player_data, gamemode))
+		reply(submission, create_reply(player_data, gamemode))
 
 
 	# only add to db if it's not already there
@@ -140,10 +140,18 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 
+def reply(submission, message):
+	comment = submission.reply(message)
+	if(STICKY):
+		log.debug("Stickying comment {}".format(comment.id))
+		comment.mod.distinguish(how="yes", sticky=True)
+
+
+
 
 def check_banned(shouldFlair):
 	log.debug("")
-	log.info("Checking for restricted users..")
+	log.info("Checking restricted users and new messages..")
 	threading.Timer(CHECK_INTERVAL, check_banned, [shouldFlair]).start() # Calls this function after x seconds, which calls itself. 
 																		 # Cheap way to check for banned users on an interval
 	for data in get_all_users():
@@ -180,14 +188,20 @@ def check_banned(shouldFlair):
 												# current utc time
 				add_stat(id, post_id, post_date, time.time(), offense_type, blatant, reportee)
 
-	# Might as well forward pms here...already have an automated function, why not?
-	for message in reddit.inbox.unread():		
-		if(message.author == AUTHOR):
-			log.debug("Not forwarding message by AUTHOR (%s)", AUTHOR)
-		log.info("Forwarding message by %s to %s", message.author, AUTHOR)
-		reddit.redditor(AUTHOR).message("Forwarding message from u/{}".format(message.author), message.body)
-		message.mark_read()
 
+	# Might as well forward pms here...already have an automated function, why not?
+	for message in reddit.inbox.unread():	
+		isComment = isinstance(message, praw.models.Comment)	
+		type = "reply" if isComment else "PM"
+		if(message.author == AUTHOR):
+			log.debug("Not forwarding {} by AUTHOR ({})".format(type, AUTHOR))
+			return
+		
+		log.info("Forwarding {} by {} to {}".format(type, message.author, AUTHOR))
+
+		reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
+									 "[" + message.body + "]({})".format(message.permalink) if isComment else message.body)
+		message.mark_read()
 	log.info("..done")
 
 
