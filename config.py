@@ -42,7 +42,7 @@ REPLY_IGNORE = ["megathread", "discussion", "mega thread", "multiple"] # don't c
 
 # If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
 DEFAULT_TO_CHEATING = False
-CHECK_INTERVAL = 900 # Check for banned users every 15 minutes (900 seconds)
+CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
 
 # Comment Config (if any of these are set to "", no comment will be left)
 # Appended to every comment

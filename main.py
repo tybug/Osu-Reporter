@@ -4,12 +4,13 @@ import secret
 import re
 from parser import *
 from db import *
-import threading
 import datetime
 import argparse
 import logging as log
 import time
 from prawcore.exceptions import RequestException
+import schedule
+import sys
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
@@ -56,7 +57,7 @@ log.info("Login successful")
 
 def main():
 	subreddit = reddit.subreddit(SUB)
-	check_banned(not args.flair) # automatically repeats on interval
+	schedule.every(CHECK_INTERVAL).minutes.do(check_banned, not args.flair) # automatically repeats on interval
 
 	# Iterate over every new submission
 	try:
@@ -65,6 +66,9 @@ def main():
 	except RequestException as e:
 		log.warning("Request exception while listening to submission stream (%s). Waiting 10 seconds and retrying", str(e))
 		time.sleep(10)
+	except KeyboardInterrupt:
+		log.info("Received SIGINT, terminating")
+		sys.exit()
 
 
 def process_submission(submission, shouldComment, shouldFlair):
@@ -151,9 +155,8 @@ def reply(submission, message):
 
 def check_banned(shouldFlair):
 	log.debug("")
-	log.info("Checking restricted users and new messages..")
-	threading.Timer(CHECK_INTERVAL, check_banned, [shouldFlair]).start() # Calls this function after x seconds, which calls itself. 
-																		 # Cheap way to check for banned users on an interval
+	log.debug("Checking restricted users and new messages..")
+	
 	for data in get_all_users():
 		log.debug("Checking if user %s is restricted", data[0])
 		id = data[0] # user id
@@ -202,7 +205,7 @@ def check_banned(shouldFlair):
 		reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
 									 "[" + message.body + "]({})".format(message.permalink) if isComment else message.body)
 		message.mark_read()
-	log.info("..done")
+	log.debug("..done")
 
 
 

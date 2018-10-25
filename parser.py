@@ -86,17 +86,18 @@ def create_reply(data, mode):
 	modes = ["osu", "taiko", "fruits", "mania"] # can't use ?m=0 to specify a gamepage in userpage url unfortunately
 	user_data = data[0]
 	top_data = data[1]
+	pp_raw = round(float(user_data["pp_raw"]))
 	reply = ("{}'s profile: {}\n\n"
 			"| Rank | PP | Playtime | Playcount |\n"
 			":-:|:-:|:-:|:-:\n"
-			"| #{:,} | {:,} | {} hours | {:,} |\n\n"
+			"| #{:,} | {} | {} hours | {:,} |\n\n"
 			"| Top Plays | Mods | PP | Accuracy | Date |\n"
 			":-:|:-:|:-:|:-:|:-:\n"
 			.format(
 					user_data["username"],
 					USERS + user_data["user_id"] + "/" + modes[int(mode)],
 					int(user_data["pp_rank"]),
-					round(float(user_data["pp_raw"])),
+					"{:,}".format(pp_raw) if pp_raw != 0 else "0 (inactive)",
 					round(int(user_data["total_seconds_played"]) / 60 / 60), # convert to hours
 					int(user_data["playcount"])
 			))
