@@ -8,8 +8,8 @@ import datetime
 import argparse
 import logging as log
 import time
+import threading
 from prawcore.exceptions import RequestException
-import schedule
 import sys
 
 parser = argparse.ArgumentParser()
@@ -57,10 +57,9 @@ log.info("Login successful")
 
 def main():
 	subreddit = reddit.subreddit(SUB)
-	schedule.every(CHECK_INTERVAL).minutes.do(check_banned, not args.flair) # automatically repeats on interval
-
 	# Iterate over every new submission
 	try:
+		check_banned(not args.flair) # repeats on CHECK_INTERVAL minutes interval
 		for submission in subreddit.stream.submissions():
 			process_submission(submission, not args.comment, not args.flair)
 	except RequestException as e:
@@ -167,6 +166,9 @@ def reply(submission, message):
 
 
 def check_banned(shouldFlair):
+	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldFlair]) 
+	thread.daemon = True # Dies when the main thread dies
+	thread.start()
 	log.debug("")
 	log.debug("Checking restricted users and new messages..")
 	
