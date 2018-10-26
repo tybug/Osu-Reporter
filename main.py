@@ -198,7 +198,7 @@ def check_banned(shouldFlair):
 			log.info("Removing user %s from database, user restricted", id)
 			remove_user(id)
 			post = praw.models.Submission(reddit, post_id) # get praw post from id, to flair
-			log.info("Flairing post %s as resolved", post.permalink)
+			log.info("Flairing post %s as resolved", post.id)
 			if(shouldFlair):
 				post.mod.flair("Resolved", "resolved")																						
 				log.debug("Adding restricted statistic for user %s on post %s, reported at %s, restricted at %s, reported for %s, blatant? %s, reported by %s",
