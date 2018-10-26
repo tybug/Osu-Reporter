@@ -58,9 +58,20 @@ def get_all_users():
 	return users
 
 
+# Misc
+
+def post_from_user(id):
+	c = sqlite3.connect(DB)
+	try:
+		cursor = c.cursor()
+		cursor.execute("SELECT * FROM users WHERE id=?", [id])
+		for row in cursor:
+			return row["post"]
+	finally:
+		c.close()
+
 
 # Stats
-
 def add_stat(user, post, reported_utc, restricted_utc, offense_type, blatant, reportee):
 	c = sqlite3.connect(DB)
 	data = [user, post, reported_utc, restricted_utc, offense_type, blatant, reportee]

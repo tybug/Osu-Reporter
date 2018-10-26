@@ -126,6 +126,19 @@ def process_submission(submission, shouldComment, shouldFlair):
 			reply(submission, REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
 		return
 
+	player_id = player_data[0]["user_id"]
+	if(user_exists(player_id)):
+		log.debug("User with id {} and name {} already exists".format(player_id, player))
+		previous_id = post_from_user(player_id)
+		previous_submission = reddit.submission(id=previous_id)
+		if(previous_submission.selftext == "[deleted]"): # not foolproof by any means - RE https://www.reddit.com/r/redditdev/comments/44a7xm/praw_how_to_tell_if_a_submission_has_been_removed/, but good enough for us
+			log.debug("previous submission at {} was deleted, removing user {} so a new entry can be placed".format(previous_id, player_id))
+			remove_user(player_id) # so we can add the newer post in a further half dozen lines	
+		else:
+			log.debug("User with id {} already has an active thread at {}, referring OP to it".format(player_id, previous_id))
+			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + previous_id, LIMIT_DAYS) + REPLY_INFO)
+			return
+
 
 
 	log.debug("Replying with data for %s", player)
@@ -133,14 +146,14 @@ def process_submission(submission, shouldComment, shouldFlair):
 		reply(submission, create_reply(player_data, gamemode))
 
 
-	# only add to db if it's not already there
-	if(not user_exists(player_data[0]["user_id"])):
-		offense_data = parse_offense_type(offense) # take rest of title and make it into single offense
-		log.debug("Adding user with name %s, id %s, post id %s, offense %s, blatant? %s, reported by %s", player, player_data[0]["user_id"],
+	offense_data = parse_offense_type(offense) # take rest of title and make it into single offense
+	log.debug("Adding user with name %s, id %s, post id %s, offense %s, blatant? %s, reported by %s", player, player_id,
 				 submission.id, offense_data[0], offense_data[1], submission.author.name)
-		add_user(player_data[0]["user_id"], submission.id, submission.created_utc, offense_data[0], offense_data[1], submission.author.name)
-	else:
-		log.debug("User %s already exists, not processing further", player_data[0]["user_id"])
+	# we can assume the id isn't in there already (avoiding UNIQUE_CONSTRAINT) because the if(user_exists) check returns or deletes it
+	add_user(player_id, submission.id, submission.created_utc, offense_data[0], offense_data[1], submission.author.name)
+
+
+
 
 
 

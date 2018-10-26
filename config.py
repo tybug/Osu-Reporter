@@ -6,9 +6,9 @@ SUB = 'osureport' # listen for submissions to this sub
 API = "https://osu.ppy.sh/api/"
 USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to
-LIMIT_DAYS = 2 # stop checking threads for invalid after they're 2 days old
+LIMIT_DAYS = 3 # stop checking threads for invalid after they're x days old
 TOP_PLAY_LIMIT = 5 # how many top plays to provide pp data for
-
+REDDIT_URL_STUB = "https://www.reddit.com/r/" + SUB
 # include alternate names for gamemodes (or common mispellings)
 GAMEMODES = {
 			 "0": ["standard", "std", "s"],
@@ -56,6 +56,10 @@ REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you fo
 # if the reported user's page gives not found at time of report
 REPLY_ALREADY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 
+# if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
+REPLY_ALREADY_REPORTED = ("The [user you reported]({}) already has a recent thread on him. "
+                            "[Please contribute your evidence and thoughts to that thread instead!]({})\n\nNote: A new report thread can be made when"
+                            " the old one is {} days old.")
 # if comments by the bot should be stickied
 STICKY = True
 
