@@ -218,7 +218,7 @@ def check_banned(shouldFlair):
 		log.info("Forwarding {} by {} to {}".format(type, message.author, AUTHOR))
 
 		reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
-									 "[" + message.body + "]({})".format(message.permalink) if isComment else message.body)
+									 "[" + message.body + "]({})".format("https://reddit.com" + message.context) if isComment else message.body)
 		message.mark_read()
 	log.debug("..done")
 
