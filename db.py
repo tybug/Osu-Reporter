@@ -66,7 +66,7 @@ def post_from_user(id):
 		cursor = c.cursor()
 		cursor.execute("SELECT * FROM users WHERE id=?", [id])
 		for row in cursor:
-			return row["post"]
+			return row[1] # row["post"]
 	finally:
 		c.close()
 
