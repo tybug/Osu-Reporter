@@ -135,7 +135,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 			remove_user(player_id) # so we can add the newer post in a further half dozen lines	
 		else:
 			log.debug("User with id {} already has an active thread at {}, referring OP to it".format(player_id, previous_id))
-			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + previous_id, LIMIT_DAYS) + REPLY_INFO)
+			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + "/" + previous_id, LIMIT_DAYS) + REPLY_INFO)
 			return
 
 
