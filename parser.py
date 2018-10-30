@@ -118,5 +118,6 @@ def create_reply(data, mode):
 
 
 def parse_map_data(map_id):
+	log.debug("Parsing map data for map {}".format(map_id))
 	response = requests.get(API + "get_beatmaps?k=" + KEY + "&b=" + map_id)
 	return response.json()[0]

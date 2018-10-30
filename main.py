@@ -11,6 +11,7 @@ import time
 import threading
 from prawcore.exceptions import RequestException
 import sys
+import json
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
@@ -63,12 +64,14 @@ def main():
 		for submission in subreddit.stream.submissions():
 			process_submission(submission, not args.comment, not args.flair)
 	except RequestException as e:
-		log.warning("Request exception while listening to submission stream (%s). Waiting 10 seconds and retrying", str(e))
+		log.warning("Request exception in submission stream: {}. Waiting 10 seconds and retrying".format(str(e)))
 		time.sleep(10)
+	except json.decoder.JSONDecodeError as e:
+		log.warning("JSONDecode Exception in submission stream: {}.".format(str(e)))
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
 		sys.exit()
-
+		
 
 def process_submission(submission, shouldComment, shouldFlair):
 	link = "https://old.reddit.com" + submission.permalink
