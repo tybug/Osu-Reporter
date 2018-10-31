@@ -9,7 +9,7 @@ import argparse
 import logging as log
 import time
 import threading
-from prawcore.exceptions import RequestException
+from prawcore.exceptions import RequestException, ServerError
 import sys
 import json
 
@@ -66,6 +66,8 @@ def main():
 	except RequestException as e:
 		log.warning("Request exception in submission stream: {}. Waiting 10 seconds and retrying".format(str(e)))
 		time.sleep(10)
+	except ServerError as e:
+		log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".fornat(str(e)))
 	except json.decoder.JSONDecodeError as e:
 		log.warning("JSONDecode Exception in submission stream: {}.".format(str(e)))
 	except KeyboardInterrupt:
