@@ -31,7 +31,7 @@ def parse_user_data(username, mode, type):
 		return
 
 	response = requests.get(API + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
-	log.debug("response after parsing data for user {}: ".format(username) + str(response))
+	log.debug("response after parsing data for user {}: ".format(username) + response.text)
 	top_data = response.json()
 
 	return [user_data[0], top_data] # we could remove extraneous data here...but honestly it's so low volume anyway
