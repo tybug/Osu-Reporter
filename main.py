@@ -176,7 +176,7 @@ def check_banned(shouldFlair):
 	log.debug("Checking restricted users and new messages..")
 	
 	for data in get_all_users():
-		log.debug("Checking if user %s is restricted", data[0])
+		# log.debug("Checking if user %s is restricted", data[0]) TODO replace with lower level .trace
 		id = data[0] # user id
 		post_id = data[1] # post id
 		post_date = data[2] # post submission date
