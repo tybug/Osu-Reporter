@@ -64,10 +64,12 @@ def main():
 		for submission in subreddit.stream.submissions():
 			process_submission(submission, not args.comment, not args.flair)
 	except RequestException as e:
-		log.warning("Request exception in submission stream: {}. Waiting 10 seconds and retrying".format(str(e)))
+		log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
 		time.sleep(10)
+	except ResponseException as e:
+		log.warning("Response exception in submission stream: {}. Ignoring; likely dropped a comment.".format(str(e)))
 	except ServerError as e:
-		log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".fornat(str(e)))
+		log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".format(str(e)))
 	except json.decoder.JSONDecodeError as e:
 		log.warning("JSONDecode Exception in submission stream: {}.".format(str(e)))
 	except KeyboardInterrupt:
@@ -116,7 +118,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 
-	if([i for i in title_data.groups() if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
+	if([i for i in title.split(" ") if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
 		log.debug("Not processing %s further; the title contained blacklisted discussion words", link)
 		return
 	

@@ -4,6 +4,7 @@ def calc_acc(play, mode):
     """
     Calculates the accuracy of the given play based on the forumla (currently) in https://osu.ppy.sh/help/wiki/Accuracy. 
     Accepts data in the format of a play from get_user_best, get_user_recent, get_scores (for a specific beatmap) or individual plays from get_match
+    Returns the accuracy to 2 decimal points
     """
 
     count0 = int(play["countmiss"])
@@ -22,7 +23,7 @@ def calc_acc(play, mode):
     elif(mode == "3"): # mania
         acc = (50*count50 + 100*count100 + 200*countkatu + 300*(count300 + countgeki)) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
 
-    return acc * 100 # convert to percent
+    return "{:.2f}".format(acc * 100) # convert to percent
 
 
 
