@@ -7,7 +7,7 @@ import logging as log
 
 def parse_gamemode(input):
 	'''
-	Parses the gamemode from the input. 
+	Parses the gamemode from the given string ("std", "s", "taiko", "mania", "fuits"). 
 	Returns the number (as a string) the osu api links expects for each gamemode. 
 	If a gamemode cannot be determined by matching against GAMEMODES, returns "0" (osu!standard)
 	'''
@@ -107,7 +107,7 @@ def create_reply(data, mode):
 		reply += ("| {} | {} | {:,} | {}% ({}) | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
-				 		  calc_mods(int(play["enabled_mods"])),
+				 		  calc_mods(play["enabled_mods"]),
 				 		  round(float(play["pp"])),
 						  calc_acc(play, mode),
 						  parse_play_rank(play["rank"]),
