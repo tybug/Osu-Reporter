@@ -12,17 +12,23 @@ import threading
 from prawcore.exceptions import RequestException, ServerError
 import sys
 import json
+# import test_module
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
 parser.add_argument("-f", "--flair", help="leaves flairs unmodified", action="store_true")
 parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
+# parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
 g = parser.add_mutually_exclusive_group()
 g.add_argument("-v", "--verbose", help="enables detailed logging", action="store_true")
 g.add_argument("-s", "--silent", help="disables all logging", action="store_true")
 
 args = parser.parse_args()
+
+# if args.test:
+# 	test_module.run()
+# 	sys.exit()
 
 if args.debug:
 	args.verbose = True
@@ -157,9 +163,6 @@ def process_submission(submission, shouldComment, shouldFlair):
 				 submission.id, offense_data[0], offense_data[1], submission.author.name)
 	# we can assume the id isn't in there already (avoiding UNIQUE_CONSTRAINT) because the if(user_exists) check returns or deletes it
 	add_user(player_id, submission.id, submission.created_utc, offense_data[0], offense_data[1], submission.author.name)
-
-
-
 
 
 
