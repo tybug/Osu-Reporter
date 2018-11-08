@@ -9,7 +9,7 @@ import argparse
 import logging as log
 import time
 import threading
-from prawcore.exceptions import RequestException, ServerError
+from prawcore.exceptions import RequestException, ServerError, ResponseException
 import sys
 import json
 # import test_module
@@ -68,19 +68,20 @@ def main():
 	try:
 		check_banned(not args.flair) # repeats on CHECK_INTERVAL minutes interval
 		for submission in subreddit.stream.submissions():
-			process_submission(submission, not args.comment, not args.flair)
-	except RequestException as e:
-		log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
-		time.sleep(10)
-	except ResponseException as e:
-		log.warning("Response exception in submission stream: {}. Ignoring; likely dropped a comment.".format(str(e)))
-	except ServerError as e:
-		log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".format(str(e)))
-	except json.decoder.JSONDecodeError as e:
-		log.warning("JSONDecode Exception in submission stream: {}.".format(str(e)))
+			try:
+				process_submission(submission, not args.comment, not args.flair)
+			except RequestException as e:
+				log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
+				time.sleep(10)
+			except ResponseException as e:
+				log.warning("Response exception in submission stream: {}. Ignoring; likely dropped a comment.".format(str(e)))
+			except ServerError as e:
+				log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".format(str(e)))
+			except json.decoder.JSONDecodeError as e:
+				log.warning("JSONDecode Exception in submission stream: {}.".format(str(e)))
 	except KeyboardInterrupt:
-		log.info("Received SIGINT, terminating")
-		sys.exit()
+			log.info("Received SIGINT, terminating")
+			sys.exit()
 		
 
 def process_submission(submission, shouldComment, shouldFlair):
