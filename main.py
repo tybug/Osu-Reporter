@@ -56,7 +56,7 @@ log.info("Logging into reddit")
 # keep reddit global
 reddit = praw.Reddit(client_id=secret.ID,
                      client_secret=secret.SECRET,
-                     user_agent="python:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
+                     user_agent="linux:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
 log.info("Login successful")
