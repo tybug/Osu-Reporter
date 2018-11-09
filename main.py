@@ -79,7 +79,9 @@ def main():
 				log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".format(str(e)))
 			except json.decoder.JSONDecodeError as e:
 				log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
-
+	
+	except TimeoutError as e:
+		log.warning("Timeout in request: {}. Ignoring".format(str(e)))
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
 		sys.exit()
