@@ -17,7 +17,7 @@ def main():
     """
 
     users = {}
-    c = sqlite3.connect("db 2.db")
+    c = sqlite3.connect("db.db")
     current_date = datetime.today()
     past_date = current_date - relativedelta.relativedelta(months=1)
     current_date = current_date.strftime("%m/%d/%Y")
