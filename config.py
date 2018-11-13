@@ -38,7 +38,7 @@ OFFENSES = {
 BLATANT = ["blatant", "blat", "obvious"]
 
 
-REPLY_IGNORE = ["megathread", "discussion", "mega thread", "multiple"] # don't comment if the title contains these
+REPLY_IGNORE = ["megathread", "discussion", "multiple", "[meta]"] # don't comment if the title contains these
 
 # If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
 DEFAULT_TO_CHEATING = False
@@ -52,7 +52,10 @@ REPLY_INFO = ("\n\n***\n\n"
 # if the title is malformatted
 REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
-					", and repost with a correctly formatted title.")
+					", and repost with a correctly formatted title.\n\n"
+                    "| Troubleshooting ||\n"
+                    ":-:|:-:\n"
+                    "| This is clearly a meta or discussion thread. How can I get the bot to recognize this? | Have one of the following (regardless of case) in your title and the bot will pass over your post, and not leave annoying comments: **" +  ", ".join(REPLY_IGNORE) + "**.&nbsp;Meta threads should be posted with [Meta] at the beginning of the title. |")
 # if the reported user's page gives not found at time of report
 REPLY_ALREADY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 
