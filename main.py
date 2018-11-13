@@ -12,12 +12,15 @@ import threading
 from prawcore.exceptions import RequestException, ServerError, ResponseException
 import sys
 import json
+import stats
 # import test_module
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
 parser.add_argument("-f", "--flair", help="leaves flairs unmodified", action="store_true")
 parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
+parser.add_argument("--stats", help="calculates and displays statistics from the db", action="store_true")
+
 # parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
 g = parser.add_mutually_exclusive_group()
@@ -51,6 +54,9 @@ log.getLogger("prawcore").setLevel(log.WARNING)
 if(args.silent):
 	log.disable()
 
+if(args.stats):
+	stats.main()
+	sys.exit()
 
 log.info("Logging into reddit")
 # keep reddit global
@@ -79,9 +85,7 @@ def main():
 				log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".format(str(e)))
 			except json.decoder.JSONDecodeError as e:
 				log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
-	
-	except TimeoutError as e:
-		log.warning("Timeout in request: {}. Ignoring".format(str(e)))
+
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
 		sys.exit()
@@ -134,8 +138,11 @@ def process_submission(submission, shouldComment, shouldFlair):
 		return
 	
 
+	try:
+		player_data = parse_user_data(player, gamemode, "string")
+	except Exception as e:
+		logging.warning("Exception while parsing user data for user {}: ".format(player) + str(e))
 
-	player_data = parse_user_data(player, gamemode, "string")
 	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
 		log.debug("User with name {} was already restricted at the time of submission, not processing further".format(player))
 		if(REPLY_ALREADY_RESTRICTED and shouldComment):
@@ -207,8 +214,11 @@ def check_banned(shouldFlair):
 			add_stat(id, post_id, post_date, "n/a", offense_type, blatant, reportee)
 			continue
 
-
-		user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
+		try:
+			user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
+		except Exception as e:
+			logging.warning("Exception while parsing user data for user {}: ",format(id) + str(e))
+			continue
 
 		if(user_data is None): # user was restricted
 			log.info("Removing user {} from database, user restricted".format(id))
