@@ -41,7 +41,7 @@ BLATANT = ["blatant", "blat", "obvious"]
 REPLY_IGNORE = ["megathread", "discussion", "multiple", "[meta]"] # don't comment if the title contains these
 
 # If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
-DEFAULT_TO_CHEATING = False
+DEFAULT_TO_CHEATING = True
 CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
 
 # Comment Config (if any of these are set to "", no comment will be left)
