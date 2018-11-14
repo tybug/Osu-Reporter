@@ -21,6 +21,7 @@ GAMEMODES = {
 # Don't bother accounting for meta or other, hard to parse
 # Prioritizes flair types higher in the list - if a title contains both "discussion" and "multiacc", it will be flaired as "discussion"
 FLAIRS = {
+          "meta": ["[meta]", "Meta"],
 		  "discussion": ["discussion", "Discussion"],
 		  "blatant": ["blatant", "Blatant"],
 		  "multi": ["multi-account", "multiacc", "multi", "multiaccount", "Multi-account"],
@@ -29,11 +30,20 @@ FLAIRS = {
 
 
 # for parsing offense type
+# TODO redo how offenses are handled...don't tier them, check for the existence of any of them and insert into db as binary value.
+# do a simple `for offense in OFFENSES:
+#                 for word in OFFENSES[offense]:
+#                     if word in title:
+#                         #binary bit manipulation`
 OFFENSES = {
             "multi": ["multi", "multiacc", "multi-account", "multiaccount"],
-            "spinhack": ["spinhack", "spin", "spin-hack"],
-            "replay editing": ["editing", "replay", "stealing", "steal"],
-            "relax": ["relax", "ur", "cv"]
+            "assist": ["assist"], # aim assist
+            "spinhack": ["spinhack", "spin", "spin-hack", "spinhacking", "spin-hacking"],
+            "stealing": ["stealing", "steal"],
+            "editing": ["editing", "edit", "correction", "replay-editing"],
+            "relax": ["relax", "ur", "cv", "rx"],
+            "auto": ["auto"],
+            "timewarp": ["warp", "timewarp", "time-warp"]
             }
 BLATANT = ["blatant", "blat", "obvious"]
 

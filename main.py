@@ -120,11 +120,13 @@ def process_submission(submission, shouldComment, shouldFlair):
 	player = info[0].strip() # take from gamemode to first pipe, remove leading + trailing spaces
 	offense = info[-1] # the last occurence. Identical to info[1] usually, 
 					   # but when there's no more pipes (ie title is "[osu!std] tybug") info[1] will throw IOOB
+					   # TODO remove offense? Only needed for parse_flair_data, but we can (and should) just pass the title there
+					   # Still need it for parse_offense_type, though.
 	log.debug("Gamemode, player, offense: [{}, {}, {}]".format(gamemode, player, offense))
 
 
 	# Flair it
-	flair_data = parse_flair_data(offense)
+	flair_data = parse_flair_data(title)
 	if(flair_data):
 		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
 			log.debug("Neglecting to flair submission {} as {}, it is already flaired resolved".format(submission.id, flair_data[0]))

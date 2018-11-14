@@ -39,15 +39,15 @@ def parse_user_data(username, mode, type):
 
 
 
-def parse_flair_data(offense):
+def parse_flair_data(title):
 	"""
 	Returns a list with [0] being what to name the flair and [1] being the css class of the flair,
 	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
 	"""
 
-	offense = re.split("\s+|/", offense) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
+	title = re.split("\s+|/", title) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
 	for flair in FLAIRS:
-		if([i for i in offense if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
+		if([i for i in title if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
 			return [FLAIRS[flair][-1], flair]
 
 	if(DEFAULT_TO_CHEATING):
@@ -87,6 +87,13 @@ def create_reply(data, mode):
 	modes = ["osu", "taiko", "fruits", "mania"] # can't use ?m=0 to specify a gamepage in userpage url unfortunately
 	user_data = data[0]
 	top_data = data[1]
+
+	# user exists, but hasn't made any plays (ie no pp at all)
+	if user_data["pp_raw"] is None:
+		reply = "{}'s profile: {}\n\nThis user has not made any plays!".format(user_data["username"], USERS + user_data["user_id"] + "/" + modes[int(mode)])
+		return reply + REPLY_INFO
+
+
 	pp_raw = round(float(user_data["pp_raw"]))
 	reply = ("{}'s profile: {}\n\n"
 			"| Rank | PP | Playtime | Playcount |\n"
