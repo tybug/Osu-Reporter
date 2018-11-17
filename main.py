@@ -119,7 +119,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 	player = title_data[1]
 	offense_data = title_data[2]
 	flair_data = title_data[3]
-	log.debug("Gamemode, player, offense, flair_data: [{}, {}, {}, {}]".format(gamemode, player, offense, flair_data))
+	log.debug("Gamemode, player, offense_data, flair_data: [{}, {}, {}, {}]".format(gamemode, player, offense_data, flair_data))
 
 
 	# Flair it
