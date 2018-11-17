@@ -106,27 +106,23 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 	title = submission.title.lower()
 	log.debug("Lowered title: {}".format(title))
-	
-	title_data = TITLE_MATCH.match(title)
-	if(not title_data): # regex didn't match
+	title_data = parse_title_data(title)
+
+
+	if(title_data is None): # regex didn't match
 		log.debug("Replying malformatted to post {}".format(submission.id))
 		if(REPLY_MALFORMAT_COMMENT and shouldComment):
 			reply(submission, REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
 
-
-	gamemode = parse_gamemode(title_data.group(1))
-	info = title_data.group(2).split("|", 1) # only split once
-	player = info[0].strip() # take from gamemode to first pipe, remove leading + trailing spaces
-	offense = info[-1] # the last occurence. Identical to info[1] usually, 
-					   # but when there's no more pipes (ie title is "[osu!std] tybug") info[1] will throw IOOB
-					   # TODO remove offense? Only needed for parse_flair_data, but we can (and should) just pass the title there
-					   # Still need it for parse_offense_type, though.
-	log.debug("Gamemode, player, offense: [{}, {}, {}]".format(gamemode, player, offense))
+	gamemode = title_data[0]
+	player = title_data[1]
+	offense_data = title_data[2]
+	flair_data = title_data[3]
+	log.debug("Gamemode, player, offense, flair_data: [{}, {}, {}, {}]".format(gamemode, player, offense, flair_data))
 
 
 	# Flair it
-	flair_data = parse_flair_data(title)
 	if(flair_data):
 		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
 			log.debug("Neglecting to flair submission {} as {}, it is already flaired resolved".format(submission.id, flair_data[0]))
@@ -139,11 +135,11 @@ def process_submission(submission, shouldComment, shouldFlair):
 		log.debug("Not processing {} further; the title contained blacklisted discussion words".format(link))
 		return
 	
-
+	player_data = None
 	try:
 		player_data = parse_user_data(player, gamemode, "string")
 	except Exception as e:
-		logging.warning("Exception while parsing user data for user {}: ".format(player) + str(e))
+		log.warning("Exception while parsing user data for user {}: ".format(player) + str(e))
 
 	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
 		log.debug("User with name {} was already restricted at the time of submission, not processing further".format(player))
@@ -173,7 +169,6 @@ def process_submission(submission, shouldComment, shouldFlair):
 		reply(submission, create_reply(player_data, gamemode))
 
 
-	offense_data = parse_offense_type(offense) # take rest of title and make it into single offense
 	log.debug("Adding user with name {}, id {}, post id {}, offense {}, blatant? {}, reported by {}".format(player, player_id,
 				 submission.id, offense_data[0], offense_data[1], submission.author.name))
 	# we can assume the id isn't in there already (avoiding UNIQUE_CONSTRAINT) because the if(user_exists) check returns or deletes it
@@ -219,7 +214,7 @@ def check_banned(shouldFlair):
 		try:
 			user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
 		except Exception as e:
-			logging.warning("Exception while parsing user data for user {}: ",format(id) + str(e))
+			log.warning("Exception while parsing user data for user {}: ".format(id) + str(e))
 			continue
 
 		if(user_data is None): # user was restricted

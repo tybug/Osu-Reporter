@@ -13,8 +13,8 @@ REDDIT_URL_STUB = "https://www.reddit.com/r/" + SUB
 GAMEMODES = {
 			 "0": ["standard", "std", "s"],
 			 "1": ["taiko", "t"],
-			 "3": ["mania", "m"], 
-			 "2": ["catch", "ctb", "fruits", "c"]
+             "2": ["catch", "ctb", "fruits", "c"],
+			 "3": ["mania", "m"]
 			 }
              
 # css class : [possible matches, ..., ..., flair title]
@@ -38,7 +38,7 @@ FLAIRS = {
 OFFENSES = {
             "multi": ["multi", "multiacc", "multi-account", "multiaccount"],
             "assist": ["assist"], # aim assist
-            "spinhack": ["spinhack", "spin", "spin-hack", "spinhacking", "spin-hacking"],
+            "spinhack": ["spinhack", "spin", "spin-hack", "spinhacking", "spin-hacking", ],
             "stealing": ["stealing", "steal"],
             "editing": ["editing", "edit", "correction", "replay-editing"],
             "relax": ["relax", "ur", "cv", "rx"],

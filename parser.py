@@ -5,6 +5,27 @@ from secret import KEY
 from utils import *
 import logging as log
 
+
+def parse_title_data(title):
+	"""
+	Returns a list containing the title data.
+	[Gamemode, player_name, [offense_name, blatant?], [flair_name, css_class]]
+	"""
+	title_data = TITLE_MATCH.match(title)
+	if(not title_data): # regex didn't match
+		return None
+
+	gamemode = parse_gamemode(title_data.group(1))
+	parts = title_data.group(2).split("|", 1) # only split once
+	player = parts[0].strip() # take from gamemode to first pipe, remove leading + trailing spaces
+	offense = parts[-1].strip() # the last occurence. Identical to info[1] usually, 
+					   # but when there's no more pipes (ie title is "[osu!std] tybug") info[1] will throw IOOB
+	offense_data = parse_offense_data(offense)
+	flair_data = parse_flair_data(title)
+	return [gamemode, player, offense_data, flair_data]
+
+
+
 def parse_gamemode(input):
 	"""
 	Parses the gamemode from the given string ("std", "s", "taiko", "mania", "fuits"). 
@@ -17,6 +38,46 @@ def parse_gamemode(input):
 			return gamemode
 	
 	return "0" # assume std if all else fails
+
+
+
+def parse_flair_data(title):
+	"""
+	Returns a list with [0] being what to name the flair and [1] being the css class of the flair,
+	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
+	"""
+
+	title = re.split("[|\s/]+", title) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
+	for flair in FLAIRS:
+		if([i for i in title if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
+			return [FLAIRS[flair][-1], flair]
+
+	if(DEFAULT_TO_CHEATING):
+		return ["Cheating", "cheating"]
+
+
+
+def parse_offense_data(offense):
+	"""
+	Determines the type of offense contained in the passed string (information after the username in the title).
+	Returns a list containing [offense_name, blatant?]
+	(whether the title contained anything in BLATANT)
+	"""
+	offense = re.split("[|\s/]+", offense)
+	log.debug("offense split: %s", offense)
+	data = ["other"]
+	for offense_type in OFFENSES:
+		log.debug("checking offense against %s", OFFENSES[offense_type])
+		if([i for i in offense if i in OFFENSES[offense_type]]):
+			data[0] = offense_type
+			break
+
+	if([i for i in offense if i in BLATANT]): # if element of offense is in blatant
+		data.append("true")
+	else:
+		data.append("false")
+
+	return data
 
 
 
@@ -36,45 +97,6 @@ def parse_user_data(username, mode, type):
 
 	return [user_data[0], top_data] # we could remove extraneous data here...but honestly it's so low volume anyway
 
-
-
-
-def parse_flair_data(title):
-	"""
-	Returns a list with [0] being what to name the flair and [1] being the css class of the flair,
-	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
-	"""
-
-	title = re.split("\s+|/", title) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
-	for flair in FLAIRS:
-		if([i for i in title if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
-			return [FLAIRS[flair][-1], flair]
-
-	if(DEFAULT_TO_CHEATING):
-		return ["cheating", "Cheating"]
-
-
-def parse_offense_type(offense):
-	"""
-	Determines the type of offense contained in the passed string (title).
-	Returns a list containing the offense at index 0 and whether it was a blatant report or not in index 1 
-	(whether the title contained anything in BLATANT)
-	"""
-	offense = re.split("\s+|/", offense)
-	log.debug("offense split: %s", offense)
-	data = ["other"]
-	for offense_type in OFFENSES:
-		log.debug("checking offense against %s", OFFENSES[offense_type])
-		if([i for i in offense if i in OFFENSES[offense_type]]):
-			data[0] = offense_type
-			break
-
-	if([i for i in offense if i in BLATANT]): # if element of offense is in blatant
-		data.append("true")
-	else:
-		data.append("false")
-
-	return data
 
 
 def create_reply(data, mode):

@@ -29,8 +29,14 @@ class TestMethods(unittest.TestCase):
         self.assertEqual(utils.calc_mods(4114), "+EZHRSO")
         self.assertEqual(utils.calc_mods(41), "+HDNFSD")
 
-    # def test_parse_gamemode_from_reddit_title(self):
-    #     self.assertEqual(parser.parse_gamemode(""), "0")
+    def test_parse_title_data_from_title(self):
+        self.assertEqual(parser.parse_title_data("[osu!std] tybug2 | blatant multiaccount"), ["0", "tybug2", ["multi", "true"], ["Blatant", "blatant"]])
+        self.assertEqual(parser.parse_title_data("[osu!taiko]tybug2|spin hacker"), ["1", "tybug2", ["spinhack", "false"], ["Cheating", "cheating"]])
+        self.assertEqual(parser.parse_title_data("[osu!m] not nathan"), ["3", "not nathan", ["other", "false"], ["Cheating", "cheating"]])
+        self.assertEqual(parser.parse_title_data("cookiezi | being too good at the game"), None)
+        self.assertEqual(parser.parse_title_data("[ sony ]"), None)
+        self.assertEqual(parser.parse_title_data("[o!ctb][ sony ]"), ["2", "[ sony ]", ["other", "false"], ["Cheating", "cheating"]])
+        self.assertEqual(parser.parse_title_data("[os!c] suki | cheating"), None)
 
 
 
@@ -41,5 +47,5 @@ class TestMethods(unittest.TestCase):
 #     # we parse the t flag with argparse and then call unittest. Unittest also parses the args with argparse, 
 #     # but doesn't understand the t flag. So we simply strip it before calling our tests
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
