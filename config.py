@@ -65,7 +65,7 @@ REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you fo
 					", and repost with a correctly formatted title.\n\n"
                     "| Troubleshooting ||\n"
                     ":-:|:-:\n"
-                    "| This is clearly a meta or discussion thread. How can I get the bot to recognize this? | Have one of the following (regardless of case) in your title and the bot will pass over your post, and not leave annoying comments: **" +  ", ".join(REPLY_IGNORE) + "**.&nbsp;Meta threads should be posted with [Meta] at the beginning of the title. |")
+                    "| This is clearly a meta or discussion thread. How can I get the bot to recognize this? | Have one of the following (case insensitive) in your title and the bot will pass over your post, and not leave annoying comments: **" +  ", ".join(REPLY_IGNORE) + "**.&nbsp;Meta threads should be posted with [Meta] at the beginning of the title. |")
 # if the reported user's page gives not found at time of report
 REPLY_ALREADY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 

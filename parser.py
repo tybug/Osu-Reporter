@@ -4,6 +4,7 @@ import requests
 from secret import KEY
 from utils import *
 import logging as log
+from datetime import datetime
 
 
 def parse_title_data(title):
@@ -67,7 +68,7 @@ def parse_offense_data(offense):
 	log.debug("offense split: %s", offense)
 	data = ["other"]
 	for offense_type in OFFENSES:
-		log.debug("checking offense against %s", OFFENSES[offense_type])
+		log.debug("checking offense {} against {}".format(offense_type, OFFENSES[offense_type]))
 		if([i for i in offense if i in OFFENSES[offense_type]]):
 			data[0] = offense_type
 			break
@@ -115,12 +116,14 @@ def create_reply(data, mode):
 		reply = "{}'s profile: {}\n\nThis user has not made any plays!".format(user_data["username"], USERS + user_data["user_id"] + "/" + modes[int(mode)])
 		return reply + REPLY_INFO
 
+	creation_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d %H:%M:%S") #2018-04-15 01:44:28
+	difference = datetime.now() - creation_date
 
 	pp_raw = round(float(user_data["pp_raw"]))
 	reply = ("{}'s profile: {}\n\n"
-			"| Rank | PP | Playtime | Playcount |\n"
-			":-:|:-:|:-:|:-:\n"
-			"| #{:,} | {} | {} hours | {:,} |\n\n"
+			"| Rank | PP | Playtime | Playcount | Country | Joined |\n"
+			":-:|:-:|:-:|:-:|:-:|:-:\n"
+			"| #{:,} | {} | {} hours | {:,} | {} | ~{} days ago|\n\n"
 			"| Top Plays | Mods | PP | Accuracy | Date |\n"
 			":-:|:-:|:-:|:-:|:-:\n"
 			.format(
@@ -129,8 +132,11 @@ def create_reply(data, mode):
 					int(user_data["pp_rank"]),
 					"{:,}".format(pp_raw) if pp_raw != 0 else "0 (inactive)",
 					round(int(user_data["total_seconds_played"]) / 60 / 60), # convert to hours
-					int(user_data["playcount"])
+					int(user_data["playcount"]),
+					user_data["country"],
+					difference.days
 			))
+
 
 	for play in top_data[0:TOP_PLAY_LIMIT]:
 		reply += ("| {} | {} | {:,} | {}% ({}) | {} |\n"

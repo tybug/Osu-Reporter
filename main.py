@@ -20,7 +20,7 @@ parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", a
 parser.add_argument("-f", "--flair", help="leaves flairs unmodified", action="store_true")
 parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
 parser.add_argument("--stats", help="calculates and displays statistics from the db", action="store_true")
-
+parser.add_argument("-p", "--from-post", help="processes a single post from given id", dest="post_id")
 # parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
 g = parser.add_mutually_exclusive_group()
@@ -56,8 +56,12 @@ if(args.silent):
 
 if(args.stats):
 	stats.main()
-	sys.exit()
+	sys.exit(0)
 
+if(args.post_id):
+	log.debug("Processing single submission {}".format(args.post_id))
+	process_submission(praw.models.submission(reddit, id=args.post_id), not args.comment, not args.flair)
+	sys.exit(0)
 log.info("Logging into reddit")
 # keep reddit global
 reddit = praw.Reddit(client_id=secret.ID,
@@ -65,6 +69,7 @@ reddit = praw.Reddit(client_id=secret.ID,
                      user_agent="linux:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
+					 
 log.info("Login successful")
 
 
@@ -75,6 +80,9 @@ def main():
 		check_banned(not args.flair) # repeats on CHECK_INTERVAL minutes interval
 		for submission in subreddit.stream.submissions():
 			try:
+				if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
+					log.debug("Submission {} is already processed".format(submission.id))
+					continue
 				process_submission(submission, not args.comment, not args.flair)
 			except RequestException as e:
 				log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
@@ -88,15 +96,12 @@ def main():
 
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
-		sys.exit()
+		sys.exit(0)
 
 		
 
 def process_submission(submission, shouldComment, shouldFlair):
 	link = "https://old.reddit.com" + submission.permalink
-	if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
-		log.debug("Submission {} is already processed".format(submission.id))
-		return
 
 	log.debug("")
 	log.info("Processing submission {}".format(link))
@@ -110,7 +115,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 	if(title_data is None): # regex didn't match
-		log.debug("Replying malformatted to post {}".format(submission.id))
+		log.debug("Replying malformatted to post {}, returning".format(submission.id))
 		if(REPLY_MALFORMAT_COMMENT and shouldComment):
 			reply(submission, REPLY_MALFORMAT_COMMENT + REPLY_INFO)
 		return
@@ -125,24 +130,25 @@ def process_submission(submission, shouldComment, shouldFlair):
 	# Flair it
 	if(flair_data):
 		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
-			log.debug("Neglecting to flair submission {} as {}, it is already flaired resolved".format(submission.id, flair_data[0]))
+			log.info("Neglecting to flair submission {} as {}, it is already flaired resolved, returning".format(submission.id, flair_data[0]))
+			return
 		elif shouldFlair:
 			submission.mod.flair(flair_data[0], flair_data[1])
 
 
 
 	if([i for i in title.split(" ") if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
-		log.debug("Not processing {} further; the title contained blacklisted discussion words".format(link))
+		log.info("title of {} contained blacklisted discussion words, returning".format(link))
 		return
-	
-	player_data = None
+
+	player_data = []
 	try:
 		player_data = parse_user_data(player, gamemode, "string")
 	except Exception as e:
 		log.warning("Exception while parsing user data for user {}: ".format(player) + str(e))
 
 	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
-		log.debug("User with name {} was already restricted at the time of submission, not processing further".format(player))
+		log.info("User with name {} was already restricted at the time of submission, replying and returning".format(player))
 		if(REPLY_ALREADY_RESTRICTED and shouldComment):
 			log.debug("Leaving already banned comment")
 			reply(submission, REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
@@ -158,13 +164,13 @@ def process_submission(submission, shouldComment, shouldFlair):
 			log.debug("previous submission at {} was deleted, removing user {} so a new entry can be placed".format(previous_id, player_id))
 			remove_user(player_id) # so we can add the newer post in a further half dozen lines	
 		else:
-			log.debug("User with id {} already has an active thread at {}, referring OP to it".format(player_id, previous_id))
+			log.info("User with id {} already has an active thread at {}, referring OP to it, returning".format(player_id, previous_id))
 			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + "/" + previous_id, LIMIT_DAYS) + REPLY_INFO)
 			return
 
 
 
-	log.debug("Replying with data for {}".format(player))
+	log.info("Replying with data for {}".format(player))
 	if shouldComment:
 		reply(submission, create_reply(player_data, gamemode))
 
@@ -200,16 +206,8 @@ def check_banned(shouldFlair):
 		offense_type = data[3]
 		blatant = data[4]
 		reportee = data[5]
-
 		post_date = int(float(post_date))
 		difference = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(post_date)
-		if(difference.total_seconds() > LIMIT_DAYS * 24 * 60 * 60): # compare seconds
-			log.info("Removing user {} from database, over time limit".format(id))
-			remove_user(id)
-			log.debug("Adding not-restricted statistic for user {} on post {}, reported at {}, restricted at {}, reported for {}, blatant? {}, reported by {}"
-					.format(id, post_id, post_date, "n/a", offense_type, blatant, reportee))
-			add_stat(id, post_id, post_date, "n/a", offense_type, blatant, reportee)
-			continue
 
 		try:
 			user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
@@ -217,6 +215,7 @@ def check_banned(shouldFlair):
 			log.warning("Exception while parsing user data for user {}: ".format(id) + str(e))
 			continue
 
+# Check if the user was restrictedfirst, then remove them from the db if over time limit. When running from an old database, old threads will still get marked resolved instaed of thrown out.
 		if(user_data is None): # user was restricted
 			log.info("Removing user {} from database, user restricted".format(id))
 			remove_user(id)
@@ -228,6 +227,13 @@ def check_banned(shouldFlair):
 				 			.format(id, post_id, post_date, time.time(), offense_type, blatant, reportee))
 												# current utc time
 				add_stat(id, post_id, post_date, time.time(), offense_type, blatant, reportee)
+		elif(difference.total_seconds() > LIMIT_DAYS * 24 * 60 * 60): # compare seconds
+			log.info("Removing user {} from database, over time limit".format(id))
+			remove_user(id)
+			log.debug("Adding not-restricted statistic for user {} on post {}, reported at {}, restricted at {}, reported for {}, blatant? {}, reported by {}"
+					.format(id, post_id, post_date, "n/a", offense_type, blatant, reportee))
+			add_stat(id, post_id, post_date, "n/a", offense_type, blatant, reportee)
+			continue
 
 
 	# Might as well forward pms here...already have an automated function, why not?
