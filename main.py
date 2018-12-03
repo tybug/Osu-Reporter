@@ -127,6 +127,11 @@ def process_submission(submission, shouldComment, shouldFlair, modifyDB):
 	title_data = parse_title_data(title)
 
 
+	if([i for i in title.split(" ") if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
+		log.info("title of {} contained blacklisted discussion words, returning".format(link))
+		return
+		
+
 	if(title_data is None): # regex didn't match
 		log.debug("Replying malformatted to post {}, returning".format(submission.id))
 		if(REPLY_MALFORMAT_COMMENT):
@@ -150,9 +155,6 @@ def process_submission(submission, shouldComment, shouldFlair, modifyDB):
 
 
 
-	if([i for i in title.split(" ") if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
-		log.info("title of {} contained blacklisted discussion words, returning".format(link))
-		return
 
 	player_data = []
 	try:
