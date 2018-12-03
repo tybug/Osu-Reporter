@@ -17,15 +17,19 @@ import stats
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
-parser.add_argument("-f", "--flair", help="leaves flairs unmodified", action="store_true")
+parser.add_argument("-f", "--flair", help="leaves flairs unmodified. No effect when set with --sweep", action="store_true")
 parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
-parser.add_argument("--stats", help="calculates and displays statistics from the db", action="store_true")
 parser.add_argument("-p", "--from-post", help="processes a single post from given id", dest="post_id")
 # parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
-g = parser.add_mutually_exclusive_group()
-g.add_argument("-v", "--verbose", help="enables detailed logging", action="store_true")
-g.add_argument("-s", "--silent", help="disables all logging", action="store_true")
+g1 = parser.add_mutually_exclusive_group()
+g1.add_argument("--stats", help="calculates and displays statistics from the db", action="store_true")
+g1.add_argument("--sweep", help="runs through the past 100 posts and flairs them appropriately, ignoring resolved threads. Does not leave comments", action="store_true")
+
+
+g2 = parser.add_mutually_exclusive_group()
+g2.add_argument("-v", "--verbose", help="enables detailed logging", action="store_true")
+g2.add_argument("-s", "--silent", help="disables all logging", action="store_true")
 
 args = parser.parse_args()
 
@@ -54,14 +58,7 @@ log.getLogger("prawcore").setLevel(log.WARNING)
 if(args.silent):
 	log.disable()
 
-if(args.stats):
-	stats.main()
-	sys.exit(0)
 
-if(args.post_id):
-	log.debug("Processing single submission {}".format(args.post_id))
-	process_submission(praw.models.submission(reddit, id=args.post_id), not args.comment, not args.flair)
-	sys.exit(0)
 log.info("Logging into reddit")
 # keep reddit global
 reddit = praw.Reddit(client_id=secret.ID,
@@ -74,6 +71,22 @@ log.info("Login successful")
 
 
 def main():
+
+	if(args.sweep):
+		sweep()
+		sys.exit(0)
+
+	if(args.stats):
+		stats.main()
+		sys.exit(0)
+
+	if(args.post_id):
+		log.debug("Processing single submission {}".format(args.post_id))
+		process_submission(praw.models.Submission(reddit, id=args.post_id), not args.comment, not args.flair, True)
+		sys.exit(0)
+
+
+
 	subreddit = reddit.subreddit(SUB)
 	# Iterate over every new submission
 	try:
@@ -83,7 +96,7 @@ def main():
 				if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
 					log.debug("Submission {} is already processed".format(submission.id))
 					continue
-				process_submission(submission, not args.comment, not args.flair)
+				process_submission(submission, not args.comment, not args.flair, True)
 			except RequestException as e:
 				log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
 				time.sleep(10)
@@ -100,7 +113,7 @@ def main():
 
 		
 
-def process_submission(submission, shouldComment, shouldFlair):
+def process_submission(submission, shouldComment, shouldFlair, modifyDB):
 	link = "https://old.reddit.com" + submission.permalink
 
 	log.debug("")
@@ -116,8 +129,8 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 	if(title_data is None): # regex didn't match
 		log.debug("Replying malformatted to post {}, returning".format(submission.id))
-		if(REPLY_MALFORMAT_COMMENT and shouldComment):
-			reply(submission, REPLY_MALFORMAT_COMMENT + REPLY_INFO)
+		if(REPLY_MALFORMAT_COMMENT):
+			reply(submission, REPLY_MALFORMAT_COMMENT + REPLY_INFO, shouldComment)
 		return
 
 	gamemode = title_data[0]
@@ -149,9 +162,9 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
 		log.info("User with name {} was already restricted at the time of submission, replying and returning".format(player))
-		if(REPLY_ALREADY_RESTRICTED and shouldComment):
+		if(REPLY_ALREADY_RESTRICTED):
 			log.debug("Leaving already banned comment")
-			reply(submission, REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO)
+			reply(submission, REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO, shouldComment)
 		return
 
 	player_id = player_data[0]["user_id"]
@@ -161,28 +174,32 @@ def process_submission(submission, shouldComment, shouldFlair):
 		previous_submission = reddit.submission(id=previous_id)
 		# not foolproof by any means - RE https://www.reddit.com/r/redditdev/comments/44a7xm/praw_how_to_tell_if_a_submission_has_been_removed/, but good enough for us
 		if(previous_submission.selftext == "[deleted]"): 
-			log.debug("previous submission at {} was deleted, removing user {} so a new entry can be placed".format(previous_id, player_id))
-			remove_user(player_id) # so we can add the newer post in a further half dozen lines	
+			if(modifyDB):
+				log.debug("previous submission at {} was deleted, removing user {} so a new entry can be placed".format(previous_id, player_id))
+				remove_user(player_id) # so we can add the newer post in a further half dozen lines	
 		else:
 			log.info("User with id {} already has an active thread at {}, referring OP to it, returning".format(player_id, previous_id))
-			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + "/" + previous_id, LIMIT_DAYS) + REPLY_INFO)
+			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + "/" + previous_id, LIMIT_DAYS) + REPLY_INFO, shouldComment)
 			return
 
 
 
 	log.info("Replying with data for {}".format(player))
-	if shouldComment:
-		reply(submission, create_reply(player_data, gamemode))
+	reply(submission, create_reply(player_data, gamemode), shouldComment)
+
+	if(modifyDB):
+		log.debug("Adding user with name {}, id {}, post id {}, offense {}, blatant? {}, reported by {}".format(player, player_id,
+				  submission.id, offense_data[0], offense_data[1], submission.author.name))
+		# we can assume the id isn't in there already (avoiding UNIQUE_CONSTRAINT) because the if(user_exists) check returns or deletes it
+		add_user(player_id, submission.id, submission.created_utc, offense_data[0], offense_data[1], submission.author.name)
 
 
-	log.debug("Adding user with name {}, id {}, post id {}, offense {}, blatant? {}, reported by {}".format(player, player_id,
-				 submission.id, offense_data[0], offense_data[1], submission.author.name))
-	# we can assume the id isn't in there already (avoiding UNIQUE_CONSTRAINT) because the if(user_exists) check returns or deletes it
-	add_user(player_id, submission.id, submission.created_utc, offense_data[0], offense_data[1], submission.author.name)
 
+def reply(submission, message, shouldReply):
+	if(not shouldReply):
+		log.debug("flag set; not leaving reply")
+		return
 
-
-def reply(submission, message):
 	comment = submission.reply(message)
 	if(STICKY):
 		log.debug("Stickying comment {}".format(comment.id))
@@ -252,6 +269,13 @@ def check_banned(shouldFlair):
 	log.debug("..done")
 
 
+
+
+def sweep():
+	subreddit = reddit.subreddit(SUB)
+	for submission in subreddit.new(limit=100):
+		process_submission(submission, False, True, False)
+		
 
 
 if __name__ == "__main__":
