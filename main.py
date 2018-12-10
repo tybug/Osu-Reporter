@@ -119,7 +119,8 @@ def process_submission(submission, shouldComment, shouldFlair, modifyDB):
 	log.debug("")
 	log.info("Processing submission {}".format(link))
 	log.debug("Adding post {} to db".format(submission.id))
-	add_submission(submission.id)
+	if(modifyDB):
+		add_submission(submission.id)
 
 
 	title = submission.title.lower()
