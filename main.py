@@ -19,7 +19,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
 parser.add_argument("-f", "--flair", help="leaves flairs unmodified. No effect when set with --sweep", action="store_true")
 parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
-parser.add_argument("-p", "--from-post", help="processes a single post from given id", dest="post_id")
+parser.add_argument("-p", "--from-id", help="processes a single post from given id", dest="post_id")
 # parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
 g1 = parser.add_mutually_exclusive_group()
