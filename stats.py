@@ -76,7 +76,7 @@ def main():
             "# Top 5 users by report count"
             "\n\n"
             "| User | Total Reports | Blatant Reports | Total reported users that got restricted | Total Restriction Rate |\n"
-            ":-:|:-:|:-:\n"
+            ":-:|:-:|:-:|:-:|:-:\n"
             ).format(rand.choice(intros), past_date, current_date,
                     int(stats[0]), int(stats[3]), int(stats[3]) / int(stats[0]) * 100, # all
                     int(stats[2]), int(stats[5]), int(stats[5]) / int(stats[2]) * 100, # normal
