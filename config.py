@@ -6,7 +6,7 @@ SUB = 'osureport' # listen for submissions to this sub
 API = "https://osu.ppy.sh/api/"
 USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to
-LIMIT_DAYS = 7 # stop checking threads for invalid after they're x days old
+LIMIT_DAYS = 31 # stop checking threads for invalid after they're x days old
 TOP_PLAY_LIMIT = 5 # how many top plays to provide pp data for
 REDDIT_URL_STUB = "https://www.reddit.com/r/" + SUB
 # include alternate names for gamemodes (or common mispellings)
