@@ -98,18 +98,27 @@ def main():
 					continue
 				process_submission(submission, not args.comment, not args.flair, True)
 			except RequestException as e:
-				log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
+				log.warning("Request exception while processing submission {}: {}. Waiting 10 seconds".format(submission.id, str(e)))
 				time.sleep(10)
 			except ResponseException as e:
-				log.warning("Response exception in submission stream: {}. Ignoring; likely dropped a comment.".format(str(e)))
+				log.warning("Response exception while processing submission {}: {}. Ignoring; likely dropped a comment.".format(submission.id, str(e)))
 			except ServerError as e:
-				log.warning("Server error in submission stream: {}. Reddit likely under heavy load, ignoring".format(str(e)))
+				log.warning("Server error while processing submission {}: {}. Reddit likely under heavy load, ignoring".format(submission.id, str(e)))
 			except json.decoder.JSONDecodeError as e:
-				log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
+				log.warning("JSONDecode exception while processing submission {}: {}.".format(submission.id, str(e)))
 
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
 		sys.exit(0)
+	except RequestException as e:
+		log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
+		time.sleep(10)
+	except ResponseException as e:
+		log.warning("Response exception in submission stream: {}.".format(str(e)))
+	except ServerError as e:
+		log.warning("Server error in submission stream: {}.".format(str(e)))
+	except json.decoder.JSONDecodeError as e:
+		log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
 
 		
 
