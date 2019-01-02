@@ -18,8 +18,9 @@ import stats
 parser = argparse.ArgumentParser()
 parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
 parser.add_argument("-f", "--flair", help="leaves flairs unmodified. No effect when set with --sweep", action="store_true")
-parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
+parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv --forgetful", action="store_true")
 parser.add_argument("-p", "--from-id", help="processes a single post from given id", dest="post_id")
+parser.add_argument("--forgetful", help="doesn't modify the database while running")
 # parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
 g1 = parser.add_mutually_exclusive_group()
@@ -41,6 +42,7 @@ if args.debug:
 	args.verbose = True
 	args.comment = True
 	args.flair = True
+	args.forgetful = True
 
 log_level = 20 # INFO
 if args.verbose:
@@ -86,7 +88,7 @@ def main():
 
 	if(args.post_id):
 		log.debug("Processing single submission {}".format(args.post_id))
-		process_submission(praw.models.Submission(reddit, id=args.post_id), not args.comment, not args.flair, True)
+		process_submission(praw.models.Submission(reddit, id=args.post_id), not args.comment, not args.flair, not args.forgetful)
 		sys.exit(0)
 
 
@@ -103,7 +105,7 @@ def main():
 					if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
 						log.debug("Submission {} is already processed".format(submission.id))
 						continue
-					process_submission(submission, not args.comment, not args.flair, True)
+					process_submission(submission, not args.comment, not args.flair, not args.forgetful)
 				except RequestException as e:
 					log.warning("Request exception while processing submission {}: {}. Waiting 10 seconds".format(submission.id, str(e)))
 					time.sleep(10)
@@ -132,6 +134,10 @@ def main():
 		
 
 def process_submission(submission, shouldComment, shouldFlair, modifyDB):
+	'''
+	Processes the given reddit submission. 
+	'''
+
 	link = "https://old.reddit.com" + submission.permalink
 
 	log.debug("")
