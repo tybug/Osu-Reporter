@@ -66,6 +66,10 @@ reddit = praw.Reddit(client_id=secret.ID,
                      user_agent="linux:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
+
+# keep submission stream global as well. PRAW streams save internal state, so if there's an error we can re-use the stream without duplicating thread checks.
+subreddit = reddit.subreddit(SUB)
+submission_stream = subreddit.stream.submissions()
 					 
 log.info("Login successful")
 
@@ -87,38 +91,43 @@ def main():
 
 
 
-	subreddit = reddit.subreddit(SUB)
-	# Iterate over every new submission
-	try:
-		check_banned(not args.flair) # repeats on CHECK_INTERVAL minutes interval
-		for submission in subreddit.stream.submissions():
-			try:
-				if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
-					log.debug("Submission {} is already processed".format(submission.id))
-					continue
-				process_submission(submission, not args.comment, not args.flair, True)
-			except RequestException as e:
-				log.warning("Request exception while processing submission {}: {}. Waiting 10 seconds".format(submission.id, str(e)))
-				time.sleep(10)
-			except ResponseException as e:
-				log.warning("Response exception while processing submission {}: {}. Ignoring; likely dropped a comment.".format(submission.id, str(e)))
-			except ServerError as e:
-				log.warning("Server error while processing submission {}: {}. Reddit likely under heavy load, ignoring".format(submission.id, str(e)))
-			except json.decoder.JSONDecodeError as e:
-				log.warning("JSONDecode exception while processing submission {}: {}.".format(submission.id, str(e)))
+	check_banned(not args.flair) # repeats on CHECK_INTERVAL minutes interval
+	# Iterate over every new submission forever. Keeps the bot very low mantainence, as the praw stream can error occasionally 
+	while True:
 
-	except KeyboardInterrupt:
-		log.info("Received SIGINT, terminating")
-		sys.exit(0)
-	except RequestException as e:
-		log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
-		time.sleep(10)
-	except ResponseException as e:
-		log.warning("Response exception in submission stream: {}.".format(str(e)))
-	except ServerError as e:
-		log.warning("Server error in submission stream: {}.".format(str(e)))
-	except json.decoder.JSONDecodeError as e:
-		log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
+		# two layers of exception handling, one for the processing and one for the submission stream. Probably a relatively dirty way to do it - 
+		# (all error handling should happen in process_submission?) - but a I said it keeps the bot low mantainence.
+		try:
+			for submission in submission_stream:
+				try:
+					if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
+						log.debug("Submission {} is already processed".format(submission.id))
+						continue
+					process_submission(submission, not args.comment, not args.flair, True)
+				except RequestException as e:
+					log.warning("Request exception while processing submission {}: {}. Waiting 10 seconds".format(submission.id, str(e)))
+					time.sleep(10)
+				except ResponseException as e:
+					log.warning("Response exception while processing submission {}: {}. Ignoring; likely dropped a comment.".format(submission.id, str(e)))
+				except ServerError as e:
+					log.warning("Server error while processing submission {}: {}. Reddit likely under heavy load, ignoring".format(submission.id, str(e)))
+				except json.decoder.JSONDecodeError as e:
+					log.warning("JSONDecode exception while processing submission {}: {}.".format(submission.id, str(e)))
+
+		except KeyboardInterrupt:
+			log.info("Received SIGINT, terminating")
+			sys.exit(0)
+		except RequestException as e:
+			log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
+			time.sleep(10)
+		except ResponseException as e:
+			log.warning("Response exception in submission stream: {}.".format(str(e)))
+		except ServerError as e:
+			log.warning("Server error in submission stream: {}.".format(str(e)))
+		except json.decoder.JSONDecodeError as e:
+			log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
+
+		time.sleep(60 * 2) # sleep for two minutes, give any connection issues some time to resolve themselves
 
 		
 
@@ -244,7 +253,7 @@ def check_banned(shouldFlair):
 			log.warning("Exception while parsing user data for user {}: ".format(id) + str(e))
 			continue
 
-# Check if the user was restrictedfirst, then remove them from the db if over time limit. When running from an old database, old threads will still get marked resolved instaed of thrown out.
+		# Check if the user was restricted first, then remove them from the db if over time limit. When running from an old database, old threads will still get marked resolved instaed of thrown out.
 		if(user_data is None): # user was restricted
 			log.info("Removing user {} from database, user restricted".format(id))
 			remove_user(id)
