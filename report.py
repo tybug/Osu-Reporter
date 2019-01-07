@@ -16,6 +16,16 @@ class Report(Recorder, RedditBound):
 
 
     def __init__(self, submission, shouldComment, shouldFlair, DB):
+        '''
+        
+        :param Submission submission: The reddit submission 
+        :param boolean shouldComment: Whether comments should be left on the submission
+        :param boolean shouldFlair: Whether the submission's flair should be modified
+        :param DB DB: The database interface and connection for this class
+        '''
+
+
+
         Report.log.debug("")
         Report.log.info("Processing submission https://redd.it/" + submission.id)
         Recorder.__init__(self, DB)
@@ -50,7 +60,7 @@ class Report(Recorder, RedditBound):
         Replies to the report with the data for the reported user, including their preivous reports.
         Also adds the user to the users table to be checked for restriction.
         '''
-        self.reply(create_reply(self.user_data, self.previous_links, self.gamemode))
+        self.reply(create_reply(self.user_data, getattr(self, "previous_links", ""), self.gamemode))
         self.DB.add_user(self.post_id, self.user_id, self.submission.created_utc, self.offense_data[0], self.offense_data[1], self.submission.author.name)
         return self
 
@@ -76,7 +86,7 @@ class Report(Recorder, RedditBound):
         if(not reports):
             return
         links = ""
-        for report, i in enumerate(reports, start=1):
+        for i, report in enumerate(reports, start=1):
             links += "[{}]({}) | ".format(i, "https://redd.it/" + str(report[0]))
         
         links = "All previous reports: " + links[:-2] if links else links

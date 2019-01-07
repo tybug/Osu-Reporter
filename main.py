@@ -206,15 +206,16 @@ def check_banned(shouldComment, shouldFlair):
 		post_id = record[0]
 		log.debug("Checking post {}".format(post_id))
 		submission = reddit.submission(id=post_id)
-		report = OldReport(submission, shouldComment, shouldFlair, record, DB)
+		report = OldReport(submission, shouldComment, shouldFlair, record, DB_CHECK)
 		
 		
 		if(report.check_restricted()): # user was restricted
 			# resolve the original post (the one we checked)
+			log.info("resolving post {}".format(report.post_id))
 			report.resolve()
 			# resolve all previous reports on the same guy, regardless of time limit
 			for _record in report.get_user_records():
-				_report = OldReport(reddit.submission(id=_record[1]), shouldComment, shouldFlair, _record, DB)
+				_report = OldReport(reddit.submission(id=_record[1]), shouldComment, shouldFlair, _record, DB_CHECK)
 				_report.resolve()
 
 
