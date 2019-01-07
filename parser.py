@@ -1,15 +1,15 @@
-from config import *
 import re
 import requests
 from secret import KEY
-from utils import *
 import logging as log
 from datetime import datetime
-
+from config import (GAMEMODES, FLAIRS, OFFENSES, BLATANT, TITLE_MATCH,
+					API_BASE, API_USERS, REPLY_FOOTER, LIMIT_TOP_PLAYS)
+from utils import calc_acc, calc_mods, parse_play_rank
 
 def parse_title_data(title):
 	"""
-	Returns a list containing the title data.
+	Returns a list containing the title data, or None if the regex failed to match.
 	[Gamemode, player_name, [offense_name, blatant?], [flair_name, css_class]]
 	"""
 	title_data = TITLE_MATCH.match(title)
@@ -45,7 +45,7 @@ def parse_gamemode(input):
 def parse_flair_data(title):
 	"""
 	Returns a list with [0] being what to name the flair and [1] being the css class of the flair,
-	or Cheating if no match could be found and DEFAULT_TO_CHEATING is True, or None otherwise
+	or Cheating if no match could be found
 	"""
 
 	title = re.split("[|\s/]+", title) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
@@ -53,8 +53,7 @@ def parse_flair_data(title):
 		if([i for i in title if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
 			return [FLAIRS[flair][-1], flair]
 
-	if(DEFAULT_TO_CHEATING):
-		return ["Cheating", "cheating"]
+	return ["Cheating", "cheating"]
 
 
 
@@ -68,7 +67,6 @@ def parse_offense_data(offense):
 	log.debug("offense split: %s", offense)
 	data = ["other"]
 	for offense_type in OFFENSES:
-		log.debug("checking offense {} against {}".format(offense_type, OFFENSES[offense_type]))
 		if([i for i in offense if i in OFFENSES[offense_type]]):
 			data[0] = offense_type
 			break
@@ -86,14 +84,14 @@ def parse_user_data(username, mode, type):
 	"""
 	Returns a list consisting of the json response the osu api gives us when querying data for the given user in the given mode
 	"""
-
-	response = requests.get(API + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
+	user_data = []
+	response = requests.get(API_BASE + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
 	user_data = response.json()
+
 	if(not user_data): # empty response (user banned / doesn't exist)
 		return
 
-	response = requests.get(API + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
-	log.debug("response after parsing data for user {}: ".format(username) + response.text)
+	response = requests.get(API_BASE + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
 	top_data = response.json()
 
 	return [user_data[0], top_data] # we could remove extraneous data here...but honestly it's so low volume anyway
@@ -104,7 +102,7 @@ def create_reply(data, mode):
 	"""
 	Data is a list of lists - element one is user data, the second element is a list of top plays info json
 	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user, 
-	a table with that user's top plays, and REPLY_INFO appended
+	and a table with that user's top plays
 	"""
 
 	modes = ["osu", "taiko", "fruits", "mania"] # can't use ?m=0 to specify a gamepage in userpage url unfortunately
@@ -113,8 +111,8 @@ def create_reply(data, mode):
 
 	# user exists, but hasn't made any plays (ie no pp at all)
 	if user_data["pp_raw"] is None:
-		reply = "{}'s profile: {}\n\nThis user has not made any plays!".format(user_data["username"], USERS + user_data["user_id"] + "/" + modes[int(mode)])
-		return reply + REPLY_INFO
+		reply = "{}'s profile: {}\n\nThis user has not made any plays!".format(user_data["username"], API_USERS + user_data["user_id"] + "/" + modes[int(mode)])
+		return reply
 
 	creation_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d %H:%M:%S") #2018-04-15 01:44:28
 	difference = datetime.now() - creation_date
@@ -128,7 +126,7 @@ def create_reply(data, mode):
 			":-:|:-:|:-:|:-:|:-:\n"
 			.format(
 					user_data["username"],
-					USERS + user_data["user_id"] + "/" + modes[int(mode)],
+					API_USERS + user_data["user_id"] + "/" + modes[int(mode)],
 					int(user_data["pp_rank"]),
 					"{:,}".format(pp_raw) if pp_raw != 0 else "0 (inactive)",
 					round(int(user_data["total_seconds_played"]) / 60 / 60), # convert to hours
@@ -138,7 +136,7 @@ def create_reply(data, mode):
 			))
 
 
-	for play in top_data[0:TOP_PLAY_LIMIT]:
+	for play in top_data[0:LIMIT_TOP_PLAYS]:
 		reply += ("| {} | {} | {:,} | {}% ({}) | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
@@ -149,11 +147,10 @@ def create_reply(data, mode):
 				 		  play["date"].split(" ")[0].replace("-", "/") # "2013-06-22 9:11:16" (api) -> "2013/06/22"
 				 ))
 
-	return (reply + REPLY_INFO)
+	return reply
 
 
 
 def parse_map_data(map_id):
-	log.debug("Parsing map data for map {}".format(map_id))
-	response = requests.get(API + "get_beatmaps?k=" + KEY + "&b=" + map_id)
+	response = requests.get(API_BASE + "get_beatmaps?k=" + KEY + "&b=" + map_id)
 	return response.json()[0]

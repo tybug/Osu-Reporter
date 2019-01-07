@@ -1,14 +1,17 @@
 import re
 
 # General Config
-DB = "db.db" # relative path to database
+DB_PATH = "db.db" # relative path to database
 SUB = 'osureport' # listen for submissions to this sub
-API = "https://osu.ppy.sh/api/"
-USERS = "https://osu.ppy.sh/users/"
+API_BASE = "https://osu.ppy.sh/api/"
+API_USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 31 # stop checking threads for invalid after they're x days old
-TOP_PLAY_LIMIT = 5 # how many top plays to provide pp data for
-REDDIT_URL_STUB = "https://www.reddit.com/r/" + SUB
+LIMIT_TOP_PLAYS = 5 # how many top plays to provide pp data for
+VERSION = "2.0"
+
+
+
 # include alternate names for gamemodes (or common mispellings)
 GAMEMODES = {
 			 "0": ["standard", "std", "s"],
@@ -50,17 +53,15 @@ BLATANT = ["blatant", "blat", "obvious"]
 
 REPLY_IGNORE = ["megathread", "discussion", "multiple", "[meta]"] # don't comment if the title contains these
 
-# If a flair type can't be parsed when first posted, the bot will flair as Cheating if this is True (else won't do anything)
-DEFAULT_TO_CHEATING = True
 CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
 
-# Comment Config (if any of these are set to "", no comment will be left)
+# Comment Config 
 # Appended to every comment
-REPLY_INFO = ("\n\n***\n\n"
+REPLY_FOOTER = ("\n\n***\n\n"
 			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)")
 
 # if the title is malformatted
-REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
+REPLY_MALFORMATTED = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
 					", and repost with a correctly formatted title.\n\n"
                     "| Troubleshooting ||\n"
@@ -69,17 +70,25 @@ REPLY_MALFORMAT_COMMENT = ("Your title was misformatted. Please make sure you fo
                     "Have one of the following (case insensitive) in your title and the bot will pass over your post, and not leave annoying comments: **" +  ", ".join(REPLY_IGNORE) + "**.&nbsp;Meta threads should be posted with [Meta] at the beginning of the title. |\n"
                     "| My title looks fine...what am I missing? | Make sure you are using the right brackets ([]) and do not have spaces in your gamemode. A title can start with [osu!std], but not [osu! std]")
 # if the reported user's page gives not found at time of report
-REPLY_ALREADY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
+REPLY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
 
 # if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
-REPLY_ALREADY_REPORTED = ("The [user you reported]({}) already has a recent thread on him. "
-                            "[Please contribute your evidence and thoughts to that thread instead!]({})\n\nNote: A new report thread can be made when"
-                            " the old one is {} days old.")
-# if comments by the bot should be stickied
-STICKY = True
+REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on him. "
+                            "[Please contribute your evidence and thoughts to that thread instead!]({})"
+                            "\n\n"
+                            "All previous reports: {}"
+                            "\n\n"
+                            "Note: A new report thread can be made when the old one is {} days old.")
+
 
 # Parse Config
 TITLE_MATCH = re.compile("\[(?:osu|o)!(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c)](.*)")
+
+# for posts not fully processed by the bot
+REJECT_BLACKLISTED = "blacklisted"
+REJECT_MALFORMATTED = "malformatted"
+REJECT_RESTRICTED = "already_restricted"
+REJECT_REPORTED = "already_reported"
 
 
 # Full credit for these two to Christoper (https://github.com/christopher-dG/osu-bot)
