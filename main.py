@@ -206,6 +206,7 @@ def check_banned(shouldComment, shouldFlair):
 	log.info("Checking " + str(len(records)) + " posts for restrictions")
 	for record in records: # only retrieves records in the past month
 		post_id = record[0]
+		log.debug("Checking post {}".format(post_id))
 		submission = reddit.submission(id=post_id)
 		report = OldReport(submission, shouldComment, shouldFlair, record, DB)
 		
