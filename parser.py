@@ -98,7 +98,7 @@ def parse_user_data(username, mode, type):
 
 
 
-def create_reply(data, mode):
+def create_reply(data, previous_links, mode):
 	"""
 	Data is a list of lists - element one is user data, the second element is a list of top plays info json
 	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user, 
@@ -146,7 +146,7 @@ def create_reply(data, mode):
 						  parse_play_rank(play["rank"]),
 				 		  play["date"].split(" ")[0].replace("-", "/") # "2013-06-22 9:11:16" (api) -> "2013/06/22"
 				 ))
-
+	reply += "\n\n" + previous_links
 	return reply
 
 

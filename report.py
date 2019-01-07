@@ -32,9 +32,6 @@ class Report(Recorder, RedditBound):
 
             if(self.user_data is not None):
                 self.user_id = self.user_data[0]["user_id"]
-        
-
-        
 
 
     def reply(self, message):
@@ -50,10 +47,12 @@ class Report(Recorder, RedditBound):
 
     def reply_data_and_mark(self):
         '''
-        Replies to the report with the data for the reported user. Also adds the user to the users table to be checked for restriction
+        Replies to the report with the data for the reported user, including their preivous reports.
+        Also adds the user to the users table to be checked for restriction.
         '''
-        self.reply(create_reply(self.user_data, self.gamemode))
+        self.reply(create_reply(self.user_data, self.previous_links, self.gamemode))
         self.DB.add_user(self.post_id, self.user_id, self.submission.created_utc, self.offense_data[0], self.offense_data[1], self.submission.author.name)
+        return self
 
 
     def flair(self):
@@ -65,15 +64,25 @@ class Report(Recorder, RedditBound):
             return self
 
         self.submission.mod.flair(self.flair_data[0], self.flair_data[1])
+        return self
         
-
 
     def has_blacklisted_words(self):
         return [i for i in REPLY_IGNORE if i in self.title]
 
 
-    def get_previous_reports(self):
-        return self.DB.submissions_from_user(self.user_id)
+    def generate_previous_links(self):
+        reports = self.DB.submissions_from_user(self.user_id)
+        if(not reports):
+            return
+        links = ""
+        for report, i in enumerate(reports, start=1):
+            links += "[{}]({}) | ".format(i, "https://redd.it/" + str(report[0]))
+        
+        links = "All previous reports: " + links[:-2] if links else links
+        self.previous_links = links
+        return links # remove trailing pipe
+
 
     def reject(self, reason):
         Report.log.info("Rejecting post {} for {}".format(self.post_id, reason))        

@@ -77,7 +77,7 @@ REPLY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn
 REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on him. "
                             "[Please contribute your evidence and thoughts to that thread instead!]({})"
                             "\n\n"
-                            "All previous reports: {}"
+                            "{}"
                             "\n\n"
                             "Note: A new report thread can be made when the old one is {} days old.")
 

@@ -176,15 +176,12 @@ def process_submission(submission, shouldComment, shouldFlair):
 		report.reply(REPLY_RESTRICTED.format(API_USERS + report.username)).reject(REJECT_RESTRICTED)
 		return
 
-
+	previous_links = report.generate_previous_links()
+	
 	previous_id = report.check_duplicate() # returns post id from db query
 	if(previous_id):
 		log.debug("User reported in post {} was already reported in the past {} days in post {}".format(report.post_id, LIMIT_DAYS, previous_id))
-		reply = ""
-		for report, i in enumerate(report.get_previous_reports(), start=1):
-			reply += "[{}]({}) | ".format(i, "https://redd.it/" + str(report[0]))
-
-		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), reply[:-2], LIMIT_DAYS))
+		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), previous_links, LIMIT_DAYS))
 		return
 	
 	# all special cases handled, finally reply with the data and add to db for sheriff to check
@@ -198,6 +195,7 @@ def check_banned(shouldComment, shouldFlair):
 	thread.start()
 	
 	# make a new one for every thread so we don't get two threads modifying at the same time
+	# generating a new connection every CHECK_INTERVAL minutes isn't terribly expensive
 	DB_CHECK = DB(args.leadless)
 	sheriff = Sheriff(DB_CHECK)
 
