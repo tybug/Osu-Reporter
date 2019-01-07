@@ -1,4 +1,3 @@
-from reddit_bound import RedditBound
 from recorder import Recorder
 import logging
 
