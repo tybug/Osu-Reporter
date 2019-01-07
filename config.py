@@ -58,7 +58,8 @@ CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
 # Comment Config 
 # Appended to every comment
 REPLY_FOOTER = ("\n\n***\n\n"
-			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)")
+			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| v{} "
+              "^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)").format(VERSION)
 
 # if the title is malformatted
 REPLY_MALFORMATTED = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
