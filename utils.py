@@ -1,4 +1,4 @@
-from config import *
+from config import MODS_INT, MOD_ORDER
 
 def calc_acc(play, mode):
     """

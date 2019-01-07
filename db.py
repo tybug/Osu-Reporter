@@ -1,80 +1,93 @@
 import sqlite3
-from config import DB
+from config import DB_PATH, LIMIT_DAYS
+import functools
+import time
 
-
-# Submissions
-
-def add_submission(id):
-	c = sqlite3.connect(DB)
-	c.execute("INSERT INTO posts VALUES(?)", [id])
-	c.commit()
-	c.close()
-
-
-def submission_exists(id):
-	c = sqlite3.connect(DB)
-	try:
-		for row in c.execute("SELECT * FROM posts WHERE id=?", [id]):
-			return True
-		return False
-	finally:
-		c.close()
+# only executes the function if leadless is false
+def check(function):
+	@functools.wraps(function)
+	def wrapper(self, *args, **kwargs):
+		if(getattr(self, "leadless")):
+			return
+		else:
+			function(self, *args, **kwargs)
+	return wrapper
 
 
 
-# Users
+# leadless = can't write to db
+class DB:
 
-def add_user(id, post, date, offense_type, blatant, reportee):
-	c = sqlite3.connect(DB)
-	data = [id, post, date, offense_type, blatant, reportee]
-	c.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?)", data)
-	c.commit()
-	c.close()
+	def __init__(self, leadless):
+		self.conn = sqlite3.connect(DB_PATH)
+		self.c = self.conn.cursor()
+		self.leadless = leadless
+		self.LIMIT_SECONDS = time.time() - LIMIT_DAYS * 24 * 60 * 60
 
-
-def remove_user(id):
-	c = sqlite3.connect(DB)
-	c.execute("DELETE FROM users WHERE id=?", [id])
-	c.commit()
-	c.close()
-
-
-
-def user_exists(id):
-	c = sqlite3.connect(DB)
-	try:
-		for row in c.execute("SELECT * FROM users WHERE id=?", [id]):
-			return True
-		return False
-	finally:
-		c.close()
-
-def get_all_users():
-	c = sqlite3.connect(DB)
-	users = []
-	for row in c.execute("SELECT * FROM users"):
-		users.append(row)
-
-	return users
+	
+	# Submissions
+	@check
+	def add_submission(self, post_id):
+		self.c.execute("INSERT INTO submissions VALUES(?, ?, ?, ?)", [post_id, None, None, False])
+		self.conn.commit()
 
 
-# Misc
+	@check
+	def reject_submission(self, post_id, rejected, reason):
+		'''
+		Updates the submission with the given post id to be rejected with the given reason
 
-def post_from_user(id):
-	c = sqlite3.connect(DB)
-	try:
-		cursor = c.cursor()
-		cursor.execute("SELECT * FROM users WHERE id=?", [id])
-		for row in cursor:
-			return row[1] # row["post"]
-	finally:
-		c.close()
+		table: submissions
+		'''
+		self.c.execute("UPDATE submissions SET rejected=?, reason=? WHERE id=?", [rejected, reason, post_id])
+		self.conn.commit()
 
 
-# Stats
-def add_stat(user, post, reported_utc, restricted_utc, offense_type, blatant, reportee):
-	c = sqlite3.connect(DB)
-	data = [user, post, reported_utc, restricted_utc, offense_type, blatant, reportee]
-	c.execute("INSERT INTO stats VALUES(?, ?, ?, ?, ?, ?, ?)", data)
-	c.commit()
-	c.close()
+	def restrict_submission(self, post_id):
+		'''
+		Updates the submission with the given post id to be restricted
+
+		table: submissions
+		'''
+		self.c.execute("UPDATE submissions SET restricted=? WHERE id=?", [True, post_id])
+		self.conn.commit()
+		
+
+
+
+	def submission_exists(self, post_id):
+		return True if self.c.execute("SELECT * FROM submissions WHERE id=?", [post_id]).fetchone() else False
+
+
+
+	# Users
+	@check
+	def add_user(self, post_id, user_id, reported_utc, offense_type, blatant, reportee):
+		data = [post_id, user_id, reported_utc, None, offense_type, blatant, reportee]
+		self.c.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?)", data)
+		self.conn.commit()
+
+
+	@check
+	def restrict_user(self, post_id, time_utc):
+		self.c.execute("UPDATE users SET RESTRICTED_UTC=? WHERE post_id=?", [time_utc, post_id])
+		self.conn.commit()
+
+
+	def user_exists(self, user_id):
+		'''
+		Returns the post id if there is an entry in the users table with the given id, and a date more recent than LIMIT_DAYS ago.
+		Otherwise returns None
+		'''
+		result = self.c.execute("SELECT * FROM users WHERE user_id=? AND reported_utc > ?", [user_id, self.LIMIT_SECONDS]).fetchone()
+		return result[1] if result else None
+		
+
+	def get_recent_users(self):
+		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL", [self.LIMIT_SECONDS]).fetchall()
+
+
+	# Misc
+	def submissions_from_user(self, user_id):
+		return self.c.execute("SELECT * FROM users WHERE user_id=?", [user_id]).fetchall()
+

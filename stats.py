@@ -1,5 +1,5 @@
 import sqlite3
-from config import DB
+from config import DB_PATH
 from datetime import datetime
 from dateutil import relativedelta
 import random as rand
@@ -16,7 +16,7 @@ def main():
     Creates a statistics report from the db.db database
     """
 
-    c = sqlite3.connect("db.db")
+    c = sqlite3.connect(DB_PATH)
     current_date = datetime.today()
     past_date = current_date - relativedelta.relativedelta(months=1)
     current_date = current_date.strftime("%m/%d/%Y")
@@ -25,7 +25,6 @@ def main():
 
     stats = [] # [total reports, blatant reports, normal reports, total restrictions, blatant restrictions, normal restrictions]
     users = {}  # {"user": [total reports, blatant reports, reported users that got restricted], ...}
-    average_time = 0
 
     query = ("SELECT COUNT(*) AS reports, "
             "SUM(CASE WHEN BLATANT = 'true' THEN 1 ELSE 0 END) AS blatant, "
@@ -60,7 +59,7 @@ def main():
     hours = average_restriction_seconds / 60 / 60
 
     body = ("{} {} to {}.\n\n"
-            "# All Posts"
+            "# All Submissions"
             "\n\n"
             "| Total Reports | Total Restrictions | Restriction Rate |\n"
             ":-:|:-:|:-:\n"

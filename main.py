@@ -1,30 +1,35 @@
-import praw
-from config import *
-import secret
-import re
-from parser import *
-from db import *
-import datetime
 import argparse
-import logging as log
+import logging
 import time
 import threading
 from prawcore.exceptions import RequestException, ServerError, ResponseException
 import sys
 import json
 import stats
-# import test_module
+import praw
+import secret
+import re
+from db import DB
+import datetime
+from report import Report
+from sheriff import Sheriff
+from old_report import OldReport
+from config import (VERSION, SUB, LIMIT_DAYS, API_USERS, CHECK_INTERVAL, AUTHOR,
+	REJECT_BLACKLISTED, REJECT_MALFORMATTED, REJECT_REPORTED, REJECT_RESTRICTED,
+	REPLY_MALFORMATTED, REPLY_REPORTED, REPLY_RESTRICTED)
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-c", "--comment", help="doesn't leave comments on posts", action="store_true")
+parser.add_argument("-c", "--comment", help="doesn't leave comments on submissions", action="store_true")
 parser.add_argument("-f", "--flair", help="leaves flairs unmodified. No effect when set with --sweep", action="store_true")
-parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv", action="store_true")
+parser.add_argument("-d", "--debug", help="runs in debug mode. Equivelant to -cfv --leadless", action="store_true")
 parser.add_argument("-p", "--from-id", help="processes a single post from given id", dest="post_id")
+parser.add_argument("--leadless", help="doesn't modify the database while running", action="store_true")
 # parser.add_argument("-t", "--test", help="runs test suite and exits", action="store_true")
 
 g1 = parser.add_mutually_exclusive_group()
 g1.add_argument("--stats", help="calculates and displays statistics from the db", action="store_true")
-g1.add_argument("--sweep", help="runs through the past 100 posts and flairs them appropriately, ignoring resolved threads. Does not leave comments", action="store_true")
+g1.add_argument("--sweep", help="runs through the past 100 submissions and flairs them appropriately, ignoring resolved threads. Sets --comment as well.", action="store_true")
 
 
 g2 = parser.add_mutually_exclusive_group()
@@ -41,32 +46,51 @@ if args.debug:
 	args.verbose = True
 	args.comment = True
 	args.flair = True
+	args.leadless = True
+
+if args.sweep:
+	args.comment = True
+
+
 
 log_level = 20 # INFO
 if args.verbose:
 	log_level = 10 # DEBUG
 
 
-log.basicConfig(format='[%(levelname)s] %(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p', level=log_level)
+log = logging.getLogger()
+log.setLevel(log_level)
+
+formatter = logging.Formatter(fmt='[%(levelname)s] %(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p')
+handler = logging.StreamHandler()
+handler.setFormatter(formatter)
+log.addHandler(handler)
 
 # Disable annoying html request logging
-log.getLogger("requests").setLevel(log.WARNING)
-log.getLogger("urllib3").setLevel(log.WARNING)
-log.getLogger("prawcore").setLevel(log.WARNING)
+logging.getLogger("requests").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+logging.getLogger("prawcore").setLevel(logging.WARNING)
 
 
 if(args.silent):
-	log.disable()
+	logging.disable()
 
 
 log.info("Logging into reddit")
 # keep reddit global
 reddit = praw.Reddit(client_id=secret.ID,
                      client_secret=secret.SECRET,
-                     user_agent="linux:com.tybug.osureporter:v" + secret.VERSION + " (by /u/tybug2)",
+                     user_agent="linux:com.tybug.osureporter:v" + VERSION + " (by /u/tybug2)",
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
-					 
+
+# keep submission stream global as well. PRAW streams save internal state, so if there's an error we can re-use the stream without duplicating thread checks.
+subreddit = reddit.subreddit(SUB)
+submission_stream = subreddit.stream.submissions()
+
+# db interface with a single connection and cursor. Only create this once to limit connections, then pass it to each recorder object (reports and sheriffs)	 
+DB_MAIN = DB(args.leadless)
+
 log.info("Login successful")
 
 
@@ -82,189 +106,121 @@ def main():
 
 	if(args.post_id):
 		log.debug("Processing single submission {}".format(args.post_id))
-		process_submission(praw.models.Submission(reddit, id=args.post_id), not args.comment, not args.flair, True)
+		process_submission(praw.models.Submission(reddit, id=args.post_id), not args.comment, not args.flair)
 		sys.exit(0)
 
 
-
-	subreddit = reddit.subreddit(SUB)
-	# Iterate over every new submission
 	try:
-		check_banned(not args.flair) # repeats on CHECK_INTERVAL minutes interval
-		for submission in subreddit.stream.submissions():
-			try:
-				if(submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
-					log.debug("Submission {} is already processed".format(submission.id))
-					continue
-				process_submission(submission, not args.comment, not args.flair, True)
-			except RequestException as e:
-				log.warning("Request exception while processing submission {}: {}. Waiting 10 seconds".format(submission.id, str(e)))
-				time.sleep(10)
-			except ResponseException as e:
-				log.warning("Response exception while processing submission {}: {}. Ignoring; likely dropped a comment.".format(submission.id, str(e)))
-			except ServerError as e:
-				log.warning("Server error while processing submission {}: {}. Reddit likely under heavy load, ignoring".format(submission.id, str(e)))
-			except json.decoder.JSONDecodeError as e:
-				log.warning("JSONDecode exception while processing submission {}: {}.".format(submission.id, str(e)))
-
+		check_banned(not args.comment, not args.flair) # repeats on CHECK_INTERVAL minutes interval
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
 		sys.exit(0)
-	except RequestException as e:
-		log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
-		time.sleep(10)
-	except ResponseException as e:
-		log.warning("Response exception in submission stream: {}.".format(str(e)))
-	except ServerError as e:
-		log.warning("Server error in submission stream: {}.".format(str(e)))
-	except json.decoder.JSONDecodeError as e:
-		log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
+		
+	# Iterate over every new submission forever. Keeps the bot very low mantainence, as the praw stream can error occasionally 
+	while True:
+
+		# two layers of exception handling, one for the processing and one for the submission stream. Probably a relatively dirty way to do it - 
+		# (all error handling should happen in process_submission?) - but a I said it keeps the bot low mantainence.
+		try:
+			for submission in submission_stream:
+				try:
+					if(DB_MAIN.submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
+						log.debug("Submission {} is already processed".format(submission.id))
+						continue
+					process_submission(submission, not args.comment, not args.flair)
+				except RequestException as e:
+					log.warning("Request exception while processing submission {}: {}. Waiting 10 seconds".format(submission.id, str(e)))
+					time.sleep(10)
+				except ServerError as e:
+					log.warning("Server error while processing submission {}: {}. Reddit likely under heavy load".format(submission.id, str(e)))
+				except json.decoder.JSONDecodeError as e:
+					log.warning("JSONDecode exception while processing submission {}: {}.".format(submission.id, str(e)))
+
+		except KeyboardInterrupt:
+			log.info("Received SIGINT, terminating")
+			sys.exit(0)
+		except RequestException as e:
+			log.warning("Request exception in submission stream: {}. Waiting 10 seconds".format(str(e)))
+			time.sleep(10)
+		except ServerError as e:
+			log.warning("Server error in submission stream: {}.".format(str(e)))
+		except json.decoder.JSONDecodeError as e:
+			log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
+
+		time.sleep(60 * 2) # sleep for two minutes, give any connection issues some time to resolve itself
 
 		
 
-def process_submission(submission, shouldComment, shouldFlair, modifyDB):
-	link = "https://old.reddit.com" + submission.permalink
+def process_submission(submission, shouldComment, shouldFlair):
+	'''
+	Processes the given reddit submission. 
+	'''
 
-	log.debug("")
-	log.info("Processing submission {}".format(link))
-	log.debug("Adding post {} to db".format(submission.id))
-	if(modifyDB):
-		add_submission(submission.id)
-
-
-	title = submission.title.lower()
-	log.debug("Lowered title: {}".format(title))
-	title_data = parse_title_data(title)
+	report = Report(submission, shouldComment, shouldFlair, DB_MAIN)
+	report.mark_read()
 
 
-	if([i for i in title.split(" ") if i in REPLY_IGNORE]): # if the title has any blacklisted words (for discssion threads), don't process it further
-		log.info("title of {} contained blacklisted discussion words, returning".format(link))
+	if(report.has_blacklisted_words()): # for discssion threads etc
+		report.reject(REJECT_BLACKLISTED)
 		return
 		
 
-	if(title_data is None): # regex didn't match
-		log.debug("Replying malformatted to post {}, returning".format(submission.id))
-		if(REPLY_MALFORMAT_COMMENT):
-			reply(submission, REPLY_MALFORMAT_COMMENT + REPLY_INFO, shouldComment)
+	if(report.check_malformatted()): # title wasn't properly formatted
+		report.reply(REPLY_MALFORMATTED).reject(REJECT_MALFORMATTED)
 		return
 
-	gamemode = title_data[0]
-	player = title_data[1]
-	offense_data = title_data[2]
-	flair_data = title_data[3]
-	log.debug("Gamemode, player, offense_data, flair_data: [{}, {}, {}, {}]".format(gamemode, player, offense_data, flair_data))
+	# Flair it based on what was in the title
+	report.flair()
 
-
-	# Flair it
-	if(flair_data):
-		if(submission.link_flair_text == "Resolved"): # don't overwrite resolved flairs
-			log.info("Neglecting to flair submission {} as {}, it is already flaired resolved, returning".format(submission.id, flair_data[0]))
-			return
-		elif shouldFlair:
-			submission.mod.flair(flair_data[0], flair_data[1])
-
-
-
-
-	player_data = []
-	try:
-		player_data = parse_user_data(player, gamemode, "string")
-	except Exception as e:
-		log.warning("Exception while parsing user data for user {}: ".format(player) + str(e))
-
-	if(player_data is None): # api gives empty json - possible misspelling or user was already restricted
-		log.info("User with name {} was already restricted at the time of submission, replying and returning".format(player))
-		if(REPLY_ALREADY_RESTRICTED):
-			log.debug("Leaving already banned comment")
-			reply(submission, REPLY_ALREADY_RESTRICTED.format(USERS + player) + REPLY_INFO, shouldComment)
+	if(report.check_restricted()): # api gives empty json - possible misspelling or user was already restricted
+		report.reply(REPLY_RESTRICTED.format(API_USERS + report.username)).reject(REJECT_RESTRICTED)
 		return
 
-	player_id = player_data[0]["user_id"]
-	if(user_exists(player_id)):
-		log.debug("User with id {} and name {} already exists".format(player_id, player))
-		previous_id = post_from_user(player_id)
-		previous_submission = reddit.submission(id=previous_id)
-		# not foolproof by any means - RE https://www.reddit.com/r/redditdev/comments/44a7xm/praw_how_to_tell_if_a_submission_has_been_removed/, but good enough for us
-		if(previous_submission.selftext == "[deleted]"): 
-			if(modifyDB):
-				log.debug("previous submission at {} was deleted, removing user {} so a new entry can be placed".format(previous_id, player_id))
-				remove_user(player_id) # so we can add the newer post in a further half dozen lines	
-		else:
-			log.info("User with id {} already has an active thread at {}, referring OP to it, returning".format(player_id, previous_id))
-			reply(submission, REPLY_ALREADY_REPORTED.format(USERS + player, REDDIT_URL_STUB + "/" + previous_id, LIMIT_DAYS) + REPLY_INFO, shouldComment)
-			return
 
+	previous_id = report.check_duplicate() # returns post id from db query
+	if(previous_id):
+		log.debug("User reported in post {} was already reported in the past {} days in post {}".format(report.post_id, LIMIT_DAYS, previous_id))
+		reply = ""
+		for report, i in enumerate(report.get_previous_reports(), start=1):
+			reply += "[{}]({}) | ".format(i, "https://redd.it/" + str(report[0]))
 
-
-	log.info("Replying with data for {}".format(player))
-	reply(submission, create_reply(player_data, gamemode), shouldComment)
-
-	if(modifyDB):
-		log.debug("Adding user with name {}, id {}, post id {}, offense {}, blatant? {}, reported by {}".format(player, player_id,
-				  submission.id, offense_data[0], offense_data[1], submission.author.name))
-		# we can assume the id isn't in there already (avoiding UNIQUE_CONSTRAINT) because the if(user_exists) check returns or deletes it
-		add_user(player_id, submission.id, submission.created_utc, offense_data[0], offense_data[1], submission.author.name)
-
-
-
-def reply(submission, message, shouldReply):
-	if(not shouldReply):
-		log.debug("flag set; not leaving reply")
+		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), reply[:-2], LIMIT_DAYS))
 		return
-
-	comment = submission.reply(message)
-	if(STICKY):
-		log.debug("Stickying comment {}".format(comment.id))
-		comment.mod.distinguish(how="yes", sticky=True)
+	
+	# all special cases handled, finally reply with the data and add to db for sheriff to check
+	report.reply_data_and_mark()
 
 
 
-
-def check_banned(shouldFlair):
-	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldFlair]) 
+def check_banned(shouldComment, shouldFlair):
+	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldComment, shouldFlair]) 
 	thread.daemon = True # Dies when the main thread dies
 	thread.start()
-	log.debug("")
-	log.debug("Checking restricted users and new messages..")
 	
-	for data in get_all_users():
-		# log.debug("Checking if user {} is restricted".format(data[0])) TODO replace with lower level .trace
-		id = data[0] # user id
-		post_id = data[1] # post id
-		post_date = data[2] # post submission date
-		offense_type = data[3]
-		blatant = data[4]
-		reportee = data[5]
-		post_date = int(float(post_date))
-		difference = datetime.datetime.utcnow() - datetime.datetime.fromtimestamp(post_date)
+	# make a new one for every thread so we don't get two threads modifying at the same time
+	DB_CHECK = DB(args.leadless)
+	sheriff = Sheriff(DB_CHECK)
 
-		try:
-			user_data = parse_user_data(id, "0", "id") # gamemode doesn't matter here since we're just checking for empty response
-		except Exception as e:
-			log.warning("Exception while parsing user data for user {}: ".format(id) + str(e))
-			continue
-
-# Check if the user was restrictedfirst, then remove them from the db if over time limit. When running from an old database, old threads will still get marked resolved instaed of thrown out.
-		if(user_data is None): # user was restricted
-			log.info("Removing user {} from database, user restricted".format(id))
-			remove_user(id)
-			post = praw.models.Submission(reddit, post_id) # get praw post from id, to flair
-			log.info("Flairing post {} as resolved".format(post.id))
-			if(shouldFlair):
-				post.mod.flair("Resolved", "resolved")																						
-				log.debug("Adding restricted statistic for user {} on post {}, reported at {}, restricted at {}, reported for {}, blatant? {}, reported by {}"
-				 			.format(id, post_id, post_date, time.time(), offense_type, blatant, reportee))
-												# current utc time
-				add_stat(id, post_id, post_date, time.time(), offense_type, blatant, reportee)
-		elif(difference.total_seconds() > LIMIT_DAYS * 24 * 60 * 60): # compare seconds
-			log.info("Removing user {} from database, over time limit".format(id))
-			remove_user(id)
-			log.debug("Adding not-restricted statistic for user {} on post {}, reported at {}, restricted at {}, reported for {}, blatant? {}, reported by {}"
-					.format(id, post_id, post_date, "n/a", offense_type, blatant, reportee))
-			add_stat(id, post_id, post_date, "n/a", offense_type, blatant, reportee)
-			continue
+	records = sheriff.get_records()
+	log.debug("")
+	log.info("Checking " + str(len(records)) + " posts for restrictions")
+	for record in records: # only retrieves records in the past month
+		post_id = record[0]
+		submission = reddit.submission(id=post_id)
+		report = OldReport(submission, shouldComment, shouldFlair, record, DB)
+		
+		
+		if(report.check_restricted()): # user was restricted
+			# resolve the original post (the one we checked)
+			report.resolve()
+			# resolve all previous reports on the same guy, regardless of time limit
+			for _record in report.get_user_records():
+				_report = OldReport(reddit.submission(id=_record[1]), shouldComment, shouldFlair, _record, DB)
+				_report.resolve()
 
 
+
+	log.debug("Done. Checking mail")
 	# Might as well forward pms here...already have an automated function, why not?
 	for message in reddit.inbox.unread():	
 		isComment = isinstance(message, praw.models.Comment)	
@@ -283,10 +239,16 @@ def check_banned(shouldFlair):
 
 
 
+
+
+
+
 def sweep():
 	subreddit = reddit.subreddit(SUB)
 	for submission in subreddit.new(limit=100):
-		process_submission(submission, False, True, False)
+		if(DB_MAIN.submission_exists(submission.id)):
+			continue
+		process_submission(submission, not args.comment, True)
 		
 
 
