@@ -62,9 +62,15 @@ log = logging.getLogger()
 log.setLevel(log_level)
 
 formatter = logging.Formatter(fmt='[%(levelname)s] %(asctime)s %(message)s', datefmt='%Y/%m/%d %I:%M:%S %p')
-handler = logging.StreamHandler()
-handler.setFormatter(formatter)
-log.addHandler(handler)
+handler_stream = logging.StreamHandler()
+handler_file = logging.FileHandler("action.log")
+
+handler_stream.setFormatter(formatter)
+handler_file.setFormatter(formatter)
+
+log.addHandler(handler_stream)
+log.addHandler(handler_file)
+
 
 # Disable annoying html request logging
 logging.getLogger("requests").setLevel(logging.WARNING)
