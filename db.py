@@ -80,7 +80,7 @@ class DB:
 		Otherwise returns None
 		'''
 		result = self.c.execute("SELECT * FROM users WHERE user_id=? AND reported_utc > ?", [user_id, self.LIMIT_SECONDS]).fetchone()
-		return result[1] if result else None
+		return result[0] if result else None
 		
 
 	def get_recent_users(self):
