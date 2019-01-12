@@ -6,25 +6,32 @@ from config import REPLY_FOOTER
 from parser import parse_title_data, parse_user_data, create_reply
 
 class Report(Recorder, RedditBound):
-    '''
-    Manages a single report submission
+    """
+    Manages a single report submission.
 
-    This class is used for managing reports as they come in. See OldReport for checking reports for restrictions
-    '''
+    This class is used for managing reports as they come in. See OldReport for checking reports for restrictions.
 
+    Attributes:
+        Submission submission: The reddit submission.
+        Boolean shouldComment: Whether comments should be left on the submission.
+        Boolean shouldFlair: Whether the flair of the submission should be modified.
+        DB DB: The database interface and connection for this class.
+    """
+
+    
     log = logging.getLogger()
 
 
     def __init__(self, submission, shouldComment, shouldFlair, DB):
-        '''
-        
-        :param Submission submission: The reddit submission 
-        :param boolean shouldComment: Whether comments should be left on the submission
-        :param boolean shouldFlair: Whether the submission's flair should be modified
-        :param DB DB: The database interface and connection for this class
-        '''
+        """
+        Initializes a Report instance.
 
-
+        Args:
+            Submission submission: The reddit submission. 
+            Boolean shouldComment: Whether comments should be left on the submission.
+            Boolean shouldFlair: Whether the flair of the submission should be modified.
+            DB DB: The database interface and connection for this class.
+        """
 
         Report.log.debug("")
         Report.log.info("Processing submission https://redd.it/" + submission.id)
@@ -45,6 +52,15 @@ class Report(Recorder, RedditBound):
 
 
     def reply(self, message):
+        """
+        Replies to the reddit submission with the given message.
+
+        Replies the message with REPLY_FOOTER appended and distinguishes that comment.
+        
+        Args:
+            String message: The message to leave.
+        """
+
         if(not self.shouldComment):
             Report.log.debug("Flag set; not leaving reply on post {}".format(self.submission.id))
             return self
@@ -56,10 +72,10 @@ class Report(Recorder, RedditBound):
 
 
     def reply_data_and_mark(self):
-        '''
+        """
         Replies to the report with the data for the reported user, including their preivous reports.
         Also adds the user to the users table to be checked for restriction.
-        '''
+        """
         self.reply(create_reply(self.user_data, getattr(self, "previous_links", ""), self.gamemode))
         self.DB.add_user(self.post_id, self.user_id, self.submission.created_utc, self.offense_data[0], self.offense_data[1], self.submission.author.name)
         return self
@@ -96,7 +112,7 @@ class Report(Recorder, RedditBound):
 
     def reject(self, reason):
         Report.log.info("Rejecting post {} for {}".format(self.post_id, reason))        
-        self.DB.reject_submission(self.post_id, True, reason)
+        self.DB.reject_submission(self.post_id, reason)
         return self
 
 

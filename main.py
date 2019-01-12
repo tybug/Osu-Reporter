@@ -158,9 +158,9 @@ def main():
 		
 
 def process_submission(submission, shouldComment, shouldFlair):
-	'''
+	"""
 	Processes the given reddit submission. 
-	'''
+	"""
 
 	report = Report(submission, shouldComment, shouldFlair, DB_MAIN)
 	report.mark_read()
@@ -207,7 +207,7 @@ def check_banned(shouldComment, shouldFlair):
 
 	records = sheriff.get_records()
 	log.debug("")
-	log.info("Checking " + str(len(records)) + " posts for restrictions")
+	log.debug("Checking " + str(len(records)) + " posts for restrictions")
 	for record in records: # only retrieves records in the past month
 		post_id = record[0]
 		log.debug("Checking post {}".format(post_id))

@@ -3,19 +3,27 @@ import logging
 
 
 class Sheriff(Recorder):
-    '''
-    Manages successive sweeps through the reported users, to check if any are reported
-    '''
+    """
+    Manages successive sweeps through the reported users, to check if any are reported.
+    """
 
     log = logging.getLogger()
 
     def __init__(self, DB):
+        """
+        Initializes a Sheriff instance.
+
+        Args:
+            DB DB: The database interface and connection for this class.
+        """
+
         Recorder.__init__(self, DB)
 
     def get_records(self):
-        '''
-        Returns all user records reported within LIMIT_DAYS (as defined by db#get_recent_users), and not already restricted, from the database
-        '''
+        """
+        Returns recently reported users (as defined by db#get_recent_users).
+        """
+
         return self.DB.get_recent_users()
 
 

@@ -5,6 +5,7 @@ db.db
 .vscode/settings.json
 log.txt
 nohup.out
+action.log
 .idea/
 
 # Byte-compiled / optimized / DLL files

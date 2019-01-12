@@ -7,14 +7,36 @@ import time
 
 class OldReport(Recorder, RedditBound):
     """
-    Manages a previously submitted report
+    Manages a previously submitted report.
 
-    Used to check the previously submitted report for restrictions. See Report for managing submissions as they come in
+    Used to check the previously submitted report for restrictions. See Report for managing submissions as they come in.
+
+    Attributes:
+        Submission submission: The reddit submission to check.
+        Boolean shouldComment: Whether comments should be left on the submission.
+        Boolean shouldFlair: Whether the flair of the submission should be modified.
+        DB DB: The database interface and connection for this class.
+        String user_id: The id of the user reported by the submission.
+        String post_date: The unix timestamp the submission was processed.
+        String offense_type: What the user was reported for.
+        Boolean blatant: Whether the report called the cheats blatant or not.
+        String reportee: The reddit username of the reportee (not including the "u/").
     """
 
     log = logging.getLogger()
 
     def __init__(self, submission, shouldComment, shouldFlair, record, DB):
+        """
+        Initializes an OldReport instance.
+        
+        Args:
+            Submission submission: The reddit submission to check.
+            Boolean shouldComment: Whether comments should be left on the submission.
+            Boolean shouldFlair: Whether the flair of the submission should be modified.
+            List record: The list returned by db#get_recent_users.
+            DB DB: The database interface and connection for this class.
+        """
+
         Recorder.__init__(self, DB)
         RedditBound.__init__(self, submission, shouldComment, shouldFlair)
 
@@ -25,6 +47,12 @@ class OldReport(Recorder, RedditBound):
         self.reportee = record[5]
 
     def check_restricted(self):
+        """
+        Checks if the user reported in the submission is restricted.
+
+        Attempts to retrive the user's information through the api. 
+        If the api returns an empty response or throws an error, returns True, else returns False.
+        """
 
         user_data = None
         try:
@@ -37,14 +65,19 @@ class OldReport(Recorder, RedditBound):
         return True if not user_data else False
 
     def get_user_records(self):
+        """
+        Retrieves information about all recent reported users. 
+
+        See db#submissions_from_user for specific implementation.
+        """
+
         return self.DB.submissions_from_user(self.user_id)
 
     def resolve(self):
         """
-        Flairs the submission tied to the OldReport as resolved and marks the entry with the OldReport's post id as restricted in the db
-
-        If shouldFlair is set the post is not flaired
+        Flairs the submission resolved and marks its database entry as restricted
         """
+        
         if(self.shouldFlair):
             self.submission.mod.flair("Resolved", "resolved")
         
