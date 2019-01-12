@@ -185,7 +185,11 @@ def process_submission(submission, shouldComment, shouldFlair):
 	previous_links = report.generate_previous_links()
 	
 	previous_id = report.check_duplicate() # returns post id from db query
-	if(previous_id):
+	
+	# If the previous submission says removed, the author likely deleted it and no one gains anything by the bot
+	# linking back there. We still want to preserve any potential history in the thread so we don't modify its 
+	# database entry so we can still link to it in "all previous reports: "
+	if(previous_id and reddit.submission(id=previous_id).selftext != "[deleted]"):
 		log.debug("User reported in post {} was already reported in the past {} days in post {}".format(report.post_id, LIMIT_DAYS, previous_id))
 		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), previous_links, LIMIT_DAYS))
 		return

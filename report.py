@@ -104,10 +104,10 @@ class Report(Recorder, RedditBound):
         links = ""
         for i, report in enumerate(reports, start=1):
             links += "[{}]({}) | ".format(i, "https://redd.it/" + str(report[0]))
-        
+                                        # remove trailing pipe
         links = "All previous reports: " + links[:-2] if links else links
         self.previous_links = links
-        return links # remove trailing pipe
+        return links 
 
 
     def reject(self, reason):
