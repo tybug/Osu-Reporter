@@ -141,6 +141,8 @@ def main():
 					log.warning("Server error while processing submission {}: {}. Reddit likely under heavy load".format(submission.id, str(e)))
 				except json.decoder.JSONDecodeError as e:
 					log.warning("JSONDecode exception while processing submission {}: {}.".format(submission.id, str(e)))
+				except Exception as e:
+					log.critical("some other error while processing submission {}: {}".format(submission.id, str(e)))
 
 		except KeyboardInterrupt:
 			log.info("Received SIGINT, terminating")
@@ -203,49 +205,58 @@ def check_banned(shouldComment, shouldFlair):
 	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldComment, shouldFlair]) 
 	thread.daemon = True # Dies when the main thread dies
 	thread.start()
+
 	
-	# make a new one for every thread so we don't get two threads modifying at the same time
-	# generating a new connection every CHECK_INTERVAL minutes isn't terribly expensive
-	DB_CHECK = DB(args.leadless)
-	sheriff = Sheriff(DB_CHECK)
+	try:
+		# make a new one for every thread so we don't get two threads modifying at the same time
+		# generating a new connection every CHECK_INTERVAL minutes isn't terribly expensive
+		DB_CHECK = DB(args.leadless)
+		sheriff = Sheriff(DB_CHECK)
 
-	records = sheriff.get_records()
-	log.debug("")
-	log.debug("Checking " + str(len(records)) + " posts for restrictions")
-	for record in records: # only retrieves records in the past month
-		post_id = record[0]
-		log.debug("Checking post {}".format(post_id))
-		submission = reddit.submission(id=post_id)
-		report = OldReport(submission, shouldComment, shouldFlair, record, DB_CHECK)
+		records = sheriff.get_records()
+		log.debug("")
+		log.debug("Checking " + str(len(records)) + " posts for restrictions")
+		for record in records: # only retrieves records in the past month
+			post_id = record[0]
+			log.debug("Checking post {}".format(post_id))
+			submission = reddit.submission(id=post_id)
+			report = OldReport(submission, shouldComment, shouldFlair, record, DB_CHECK)
 		
 		
-		if(report.check_restricted()): # user was restricted
-			# resolve the original post (the one we checked)
-			log.info("resolving post {}".format(report.post_id))
-			report.resolve()
-			# resolve all previous reports on the same guy, regardless of time limit
-			for _record in report.get_user_records():
-				_report = OldReport(reddit.submission(id=_record[1]), shouldComment, shouldFlair, _record, DB_CHECK)
-				_report.resolve()
+			if(report.check_restricted()): # user was restricted
+				# resolve the original post (the one we checked)
+				log.info("resolving post {}".format(report.post_id))
+				report.resolve()
+				# resolve all previous reports on the same guy, regardless of time limit
+				for _record in report.get_user_records():
+					_report = OldReport(reddit.submission(id=_record[1]), shouldComment, shouldFlair, _record, DB_CHECK)
+					_report.resolve()
 
 
 
-	log.debug("Done. Checking mail")
-	# Might as well forward pms here...already have an automated function, why not?
-	for message in reddit.inbox.unread():	
-		isComment = isinstance(message, praw.models.Comment)	
-		type = "reply" if isComment else "PM"
-		if(message.author == AUTHOR):
-			log.debug("Not forwarding {} by AUTHOR ({})".format(type, AUTHOR))
-			return
+		log.debug("Done. Checking mail")
+		# Might as well forward pms here...already have an automated function, why not?	
+		for message in reddit.inbox.unread():	
+			isComment = isinstance(message, praw.models.Comment)	
+			type = "reply" if isComment else "PM"
+			if(message.author == AUTHOR):
+				log.debug("Not forwarding {} by AUTHOR ({})".format(type, AUTHOR))
+				return
 		
-		log.info("Forwarding {} by {} to {}".format(type, message.author, AUTHOR))
+			log.info("Forwarding {} by {} to {}".format(type, message.author, AUTHOR))
 
-		reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
-									 "[" + message.body + "]({})".format("https://reddit.com" + message.context) if isComment else message.body)
-		message.mark_read()
-	log.debug("..done")
-
+			reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
+										 "[" + message.body + "]({})".format("https://reddit.com" + message.context) if isComment else message.body)
+			message.mark_read()
+		log.debug("..done")
+	except RequestException as e:
+		log.warning("Request exception while checking old reports: {}".format(str(e)))
+	except ServerError as e:
+		log.warning("Server error while checking old reports: {}. Reddit likely under heavy load".format(str(e)))
+	except json.decoder.JSONDecodeError as e:
+		log.warning("JSONDecode exception while checking old reports: {}.".format(str(e)))
+	except Exception as e:
+		log.critical("some other error while checking reports: {}".format(str(e)))
 
 
 
