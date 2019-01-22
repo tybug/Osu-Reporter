@@ -7,7 +7,7 @@ import time
 def check(function):
 	"""
 	Doesn't let the decorated function execute if self.leadless is True.
-	
+
 	Returns if leadless is True, executes the function otherwise.
 	"""
 
@@ -23,14 +23,14 @@ def check(function):
 class DB:
 	"""
 	Manages read/write intercations with the database.
-	
+
 	Attributes:
 		Connection conn: The database connection.
 		Cursor c = The database cursor.
 		Boolean leadless: True if the instance should not write to the database, False otherwise.
 		Float LIMIT_SECONDS: The threshold, in seconds, for reported_utc when fetching recent users.
 	"""
-	
+
 	LIMIT_SECONDS = time.time() - LIMIT_DAYS * 24 * 60 * 60
 
 	def __init__(self, leadless):
@@ -47,7 +47,7 @@ class DB:
 		self.c = self.conn.cursor()
 		self.leadless = leadless
 
-	
+
 	# Submissions
 	@check
 	def add_submission(self, post_id):
@@ -58,7 +58,7 @@ class DB:
 
 		Args:
 			String post_id: The post_id value of the sql entry
-		"""	
+		"""
 
 		self.c.execute("INSERT INTO submissions VALUES(?, ?, ?, ?)", [post_id, None, None, False])
 		self.conn.commit()
@@ -67,14 +67,14 @@ class DB:
 	@check
 	def reject_submission(self, post_id, reason):
 		"""
-		
+
 		Marks a submisison as rejected.
 
 		Updates the entry in the SUBMISSIONS table with the given post id to be rejected with the given reason.
 
 		Args:
 			String post_id: The post_id of the submission to reject
-			String reason: The reason the post was rejectde 
+			String reason: The reason the post was rejectde
 						   (one of REJECT_BLACKLISTED, REJECT_MALFORMATTED, REJECT_RESTRICTED, REJECT_REPORTED)
 		"""
 
@@ -94,7 +94,7 @@ class DB:
 
 		self.c.execute("UPDATE submissions SET restricted=? WHERE id=?", [True, post_id])
 		self.conn.commit()
-		
+
 
 
 
@@ -103,7 +103,7 @@ class DB:
 		Checks if a submission exists
 
 		Returns True if a submission exists in the SUBMISSIONS table with the given post_id, False otherwise
-		
+
 		Args:
 			String post_id: the post_id to check for the existence of
 		"""
@@ -161,7 +161,7 @@ class DB:
 
 		result = self.c.execute("SELECT * FROM users WHERE user_id=? AND reported_utc > ?", [user_id, DB.LIMIT_SECONDS]).fetchone()
 		return result[0] if result else None
-		
+
 
 	def get_recent_users(self):
 		"""
@@ -183,4 +183,3 @@ class DB:
 		"""
 
 		return self.c.execute("SELECT * FROM users WHERE user_id=?", [user_id]).fetchall()
-

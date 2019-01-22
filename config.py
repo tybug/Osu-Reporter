@@ -19,7 +19,7 @@ GAMEMODES = {
              "2": ["catch", "ctb", "fruits", "c"],
 			 "3": ["mania", "m"]
 			 }
-             
+
 # css class : [possible matches, ..., ..., flair title]
 # Don't bother accounting for meta or other, hard to parse
 # Prioritizes flair types higher in the list - if a title contains both "discussion" and "multiacc", it will be flaired as "discussion"
@@ -55,7 +55,7 @@ REPLY_IGNORE = ["megathread", "discussion", "multiple", "[meta]"] # don't commen
 
 CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
 
-# Comment Config 
+# Comment Config
 # Appended to every comment
 REPLY_FOOTER = ("\n\n***\n\n"
 			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| ^(v{}) "
