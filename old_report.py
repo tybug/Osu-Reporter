@@ -28,7 +28,7 @@ class OldReport(Recorder, RedditBound):
     def __init__(self, submission, shouldComment, shouldFlair, record, DB):
         """
         Initializes an OldReport instance.
-        
+
         Args:
             Submission submission: The reddit submission to check.
             Boolean shouldComment: Whether comments should be left on the submission.
@@ -50,7 +50,7 @@ class OldReport(Recorder, RedditBound):
         """
         Checks if the user reported in the submission is restricted.
 
-        Attempts to retrive the user's information through the api. 
+        Attempts to retrive the user's information through the api.
         If the api returns an empty response or throws an error, returns True, else returns False.
         """
 
@@ -61,12 +61,12 @@ class OldReport(Recorder, RedditBound):
         except Exception as e:
             OldReport.log.warning("Exception while parsing user data for user {}: {}".format(self.user_id, str(e)))
             return True
-        
+
         return True if not user_data else False
 
     def get_user_records(self):
         """
-        Retrieves information about all recent reported users. 
+        Retrieves information about all recent reported users.
 
         See db#submissions_from_user for specific implementation.
         """
@@ -77,9 +77,9 @@ class OldReport(Recorder, RedditBound):
         """
         Flairs the submission resolved and marks its database entry as restricted
         """
-        
+
         if(self.shouldFlair):
             self.submission.mod.flair("Resolved", "resolved")
-        
+
         self.DB.restrict_user(self.post_id, time.time())
         self.DB.restrict_submission(self.post_id)
