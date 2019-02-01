@@ -94,7 +94,7 @@ reddit = praw.Reddit(client_id=secret.ID,
 subreddit = reddit.subreddit(SUB)
 submission_stream = subreddit.stream.submissions()
 
-# db interface with a single connection and cursor. Only create this once to limit connections, then pass it to each recorder object (reports and sheriffs)	 
+# db interface with a single connection and cursor. Only create this once to limit connections, then pass it to each recorder object (reports and sheriffs)
 DB_MAIN = DB(args.leadless)
 
 log.info("Login successful")
@@ -121,11 +121,11 @@ def main():
 	except KeyboardInterrupt:
 		log.info("Received SIGINT, terminating")
 		sys.exit(0)
-		
-	# Iterate over every new submission forever. Keeps the bot very low mantainence, as the praw stream can error occasionally 
+
+	# Iterate over every new submission forever. Keeps the bot very low mantainence, as the praw stream can error occasionally
 	while True:
 
-		# two layers of exception handling, one for the processing and one for the submission stream. Probably a relatively dirty way to do it - 
+		# two layers of exception handling, one for the processing and one for the submission stream. Probably a relatively dirty way to do it -
 		# (all error handling should happen in process_submission?) - but a I said it keeps the bot low mantainence.
 		try:
 			for submission in submission_stream:
@@ -154,14 +154,16 @@ def main():
 			log.warning("Server error in submission stream: {}.".format(str(e)))
 		except json.decoder.JSONDecodeError as e:
 			log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
+		except Exception as e:
+			log.critical("some other error in submissiobn stream: {}".format(str(e)))
 
 		time.sleep(60 * 2) # sleep for two minutes, give any connection issues some time to resolve itself
 
-		
+
 
 def process_submission(submission, shouldComment, shouldFlair):
 	"""
-	Processes the given reddit submission. 
+	Processes the given reddit submission.
 	"""
 
 	report = Report(submission, shouldComment, shouldFlair, DB_MAIN)
@@ -171,7 +173,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 	if(report.has_blacklisted_words()): # for discssion threads etc
 		report.reject(REJECT_BLACKLISTED)
 		return
-		
+
 
 	if(report.check_malformatted()): # title wasn't properly formatted
 		report.reply(REPLY_MALFORMATTED).reject(REJECT_MALFORMATTED)
@@ -185,28 +187,28 @@ def process_submission(submission, shouldComment, shouldFlair):
 		return
 
 	previous_links = report.generate_previous_links()
-	
+
 	previous_id = report.check_duplicate() # returns post id from db query
-	
+
 	# If the previous submission says removed, the author likely deleted it and no one gains anything by the bot
-	# linking back there. We still want to preserve any potential history in the thread so we don't modify its 
+	# linking back there. We still want to preserve any potential history in the thread so we don't modify its
 	# database entry so we can still link to it in "all previous reports: "
 	if(previous_id and reddit.submission(id=previous_id).selftext != "[deleted]"):
 		log.debug("User reported in post {} was already reported in the past {} days in post {}".format(report.post_id, LIMIT_DAYS, previous_id))
 		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), previous_links, LIMIT_DAYS))
 		return
-	
+
 	# all special cases handled, finally reply with the data and add to db for sheriff to check
 	report.reply_data_and_mark()
 
 
 
 def check_banned(shouldComment, shouldFlair):
-	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldComment, shouldFlair]) 
+	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldComment, shouldFlair])
 	thread.daemon = True # Dies when the main thread dies
 	thread.start()
 
-	
+
 	try:
 		# make a new one for every thread so we don't get two threads modifying at the same time
 		# generating a new connection every CHECK_INTERVAL minutes isn't terribly expensive
@@ -221,8 +223,8 @@ def check_banned(shouldComment, shouldFlair):
 			log.debug("Checking post {}".format(post_id))
 			submission = reddit.submission(id=post_id)
 			report = OldReport(submission, shouldComment, shouldFlair, record, DB_CHECK)
-		
-		
+
+
 			if(report.check_restricted()): # user was restricted
 				# resolve the original post (the one we checked)
 				log.info("resolving post {}".format(report.post_id))
@@ -235,14 +237,14 @@ def check_banned(shouldComment, shouldFlair):
 
 
 		log.debug("Done. Checking mail")
-		# Might as well forward pms here...already have an automated function, why not?	
-		for message in reddit.inbox.unread():	
-			isComment = isinstance(message, praw.models.Comment)	
+		# Might as well forward pms here...already have an automated function, why not?
+		for message in reddit.inbox.unread():
+			isComment = isinstance(message, praw.models.Comment)
 			type = "reply" if isComment else "PM"
 			if(message.author == AUTHOR):
 				log.debug("Not forwarding {} by AUTHOR ({})".format(type, AUTHOR))
 				return
-		
+
 			log.info("Forwarding {} by {} to {}".format(type, message.author, AUTHOR))
 
 			reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
@@ -270,7 +272,7 @@ def sweep():
 		if(DB_MAIN.submission_exists(submission.id)):
 			continue
 		process_submission(submission, not args.comment, True)
-		
+
 
 
 if __name__ == "__main__":
