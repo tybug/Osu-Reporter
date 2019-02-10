@@ -8,7 +8,7 @@ API_USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 3 # disallow new reports on the same user within this many days
 LIMIT_TOP_PLAYS = 5 # how many top plays to provide pp data for
-VERSION = "2.1"
+VERSION = "2.2"
 
 
 
@@ -83,7 +83,7 @@ REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on
 
 
 # Parse Config
-TITLE_MATCH = re.compile("\[(?:osu|o)!(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c)](.*)")
+TITLE_MATCH = re.compile("\[(?:(?:osu|o)!)?(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c)](.*)")
 
 # for posts not fully processed by the bot
 REJECT_BLACKLISTED = "blacklisted"

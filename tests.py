@@ -14,14 +14,14 @@ class TestMethods(unittest.TestCase):
                 "countgeki": "174"} # taken from my current top play
         self.assertEqual(utils.calc_acc(play, mode=0), "97.91")
         self.assertEqual(utils.calc_acc(play, mode=1), "98.43")
-        self.assertEqual(utils.calc_acc(play, mode=2), "97.64") 
-        self.assertEqual(utils.calc_acc(play, mode=3), "97.72") 
+        self.assertEqual(utils.calc_acc(play, mode=2), "97.64")
+        self.assertEqual(utils.calc_acc(play, mode=3), "97.72")
 
     def test_convert_api_rank_to_human_readable(self):
         self.assertEqual(utils.parse_play_rank("X"), "SS")
         self.assertEqual(utils.parse_play_rank("XH"), "SS")
         self.assertEqual(utils.parse_play_rank("SH"), "S")
-        
+
     def test_convert_mod_integer_to_ordered_mod_string(self):
         self.assertEqual(utils.calc_mods(0), "Nomod")
         self.assertEqual(utils.calc_mods(4), "+TD")
@@ -37,14 +37,16 @@ class TestMethods(unittest.TestCase):
         self.assertEqual(parser.parse_title_data("[ sony ]"), None)
         self.assertEqual(parser.parse_title_data("[o!ctb][ sony ]"), ["2", "[ sony ]", ["other", "false"], ["Cheating", "cheating"]])
         self.assertEqual(parser.parse_title_data("[os!c] suki | cheating"), None)
+        self.assertEqual(parser.parse_title_data("[!std] suki | cheating"), None)
+        self.assertEqual(parser.parse_title_data("[mania] suki | cheating"), ["3", "suki", ["other", "false"], ["Cheating", "cheating"]])
 
 
 
 
 # def run():
-#     unittest.main(argv=sys.argv[1:]) 
+#     unittest.main(argv=sys.argv[1:])
 #     # Remove all args from sys.argv. This seems like a hack but is actually relatively clean; when we call python main.py -t,
-#     # we parse the t flag with argparse and then call unittest. Unittest also parses the args with argparse, 
+#     # we parse the t flag with argparse and then call unittest. Unittest also parses the args with argparse,
 #     # but doesn't understand the t flag. So we simply strip it before calling our tests
 
 if __name__ == "__main__":
