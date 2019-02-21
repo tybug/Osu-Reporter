@@ -19,7 +19,7 @@ def parse_title_data(title):
 	gamemode = parse_gamemode(title_data.group(1))
 	parts = title_data.group(2).split("|", 1) # only split once
 	player = parts[0].strip() # take from gamemode to first pipe, remove leading + trailing spaces
-	offense = parts[-1].strip() # the last occurence. Identical to info[1] usually, 
+	offense = parts[-1].strip() # the last occurence. Identical to info[1] usually,
 					   # but when there's no more pipes (ie title is "[osu!std] tybug") info[1] will throw IOOB
 	offense_data = parse_offense_data(offense)
 	flair_data = parse_flair_data(title)
@@ -29,15 +29,15 @@ def parse_title_data(title):
 
 def parse_gamemode(input):
 	"""
-	Parses the gamemode from the given string ("std", "s", "taiko", "mania", "fuits"). 
-	Returns the number (as a string) the osu api links expects for each gamemode. 
+	Parses the gamemode from the given string ("std", "s", "taiko", "mania", "fuits").
+	Returns the number (as a string) the osu api links expects for each gamemode.
 	If a gamemode cannot be determined by matching against GAMEMODES, returns "0" (osu!standard)
 	"""
 
 	for gamemode in GAMEMODES:
 		if(input in GAMEMODES[gamemode]):
 			return gamemode
-	
+
 	return "0" # assume std if all else fails
 
 
@@ -101,7 +101,7 @@ def parse_user_data(username, mode, type):
 def create_reply(data, previous_links, mode):
 	"""
 	Data is a list of lists - element one is user data, the second element is a list of top plays info json
-	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user, 
+	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user,
 	and a table with that user's top plays
 	"""
 

@@ -5,6 +5,11 @@ from recorder import Recorder
 import time
 
 
+
+import requests
+from config import API_BASE
+from secret import KEY
+
 class OldReport(Recorder, RedditBound):
     """
     Manages a previously submitted report.
@@ -59,7 +64,8 @@ class OldReport(Recorder, RedditBound):
             user_data = parse_user_data(self.user_id, "0", "id")    # gamemode doesn't matter here since we're just
                                                                     # checking for empty response
         except Exception as e:
-            OldReport.log.warning("Exception while parsing user data for user {}: {}".format(self.user_id, str(e)))
+            log = requests.get(API_BASE + "get_user?k=" + KEY + "&u=" + self.user_id + "&m=" + "0" + "&type=" + "id")
+            OldReport.log.warning("Exception while parsing user data for user {}: {}. Log: {}".format(self.user_id, str(e), log))
             return True
 
         return True if not user_data else False
