@@ -39,7 +39,7 @@ class TestMethods(unittest.TestCase):
         self.assertEqual(parser.parse_title_data("[os!c] suki | cheating"), None)
         self.assertEqual(parser.parse_title_data("[!std] suki | cheating"), None)
         self.assertEqual(parser.parse_title_data("[mania] suki | cheating"), ["3", "suki", ["other", "false"], ["Cheating", "cheating"]])
-
+        self.assertEqual(parser.parse_title_data("[osu!std] SwordArtOnline_old | cheating"), ["0", "SwordArtOnline_old", ["other", "false"], ["Cheating", "cheating"]])
 
 
 
