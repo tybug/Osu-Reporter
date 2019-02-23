@@ -231,7 +231,7 @@ def check_banned(shouldComment, shouldFlair):
 				report.resolve()
 				# resolve all previous reports on the same guy, regardless of time limit
 				for _record in report.get_user_records():
-					_report = OldReport(reddit.submission(id=_record[1]), shouldComment, shouldFlair, _record, DB_CHECK)
+					_report = OldReport(reddit.submission(id=_record[0]), shouldComment, shouldFlair, _record, DB_CHECK)
 					_report.resolve()
 
 
