@@ -65,13 +65,11 @@ REPLY_FOOTER = ("\n\n***\n\n"
 REPLY_MALFORMATTED = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
 					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
 					", and repost with a correctly formatted title.\n\n"
-                    "| Troubleshooting ||\n"
-                    ":-:|:-:\n"
-                    "| This is clearly a meta or discussion thread. How can I get the bot to recognize this? |"
-                    "Have one of the following (case insensitive) in your title and the bot will pass over your post, and not leave annoying comments: **" +  ", ".join(REPLY_IGNORE) + "**.&nbsp;Meta threads should be posted with [Meta] at the beginning of the title. |\n"
-                    "| My title looks fine...what am I missing? | Make sure you are using the right brackets ([]) and do not have spaces in your gamemode. A title can start with [osu!std], but not [osu! std]")
+                    "Make sure your title begins with [osu!std] with no spaces or its equivelant as layed out in the formatting rules.\n\n"
+                    "If this is a meta or discussion thread, repost with a title containing one of **" +  ", ".join(REPLY_IGNORE) + "**. "
+                    "Meta threads should be posted with [meta] at the beginning of the title.")
 # if the reported user's page gives not found at time of report
-REPLY_RESTRICTED = ("The [user you reported]({}) is already restricted, or doesn't exist!")
+REPLY_RESTRICTED = ("The [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted.")
 
 # if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
 REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on him. "
