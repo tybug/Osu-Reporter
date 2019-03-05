@@ -18,7 +18,7 @@ class Report(Recorder, RedditBound):
         DB DB: The database interface and connection for this class.
     """
 
-    
+
     log = logging.getLogger()
 
 
@@ -27,7 +27,7 @@ class Report(Recorder, RedditBound):
         Initializes a Report instance.
 
         Args:
-            Submission submission: The reddit submission. 
+            Submission submission: The reddit submission.
             Boolean shouldComment: Whether comments should be left on the submission.
             Boolean shouldFlair: Whether the flair of the submission should be modified.
             DB DB: The database interface and connection for this class.
@@ -56,7 +56,7 @@ class Report(Recorder, RedditBound):
         Replies to the reddit submission with the given message.
 
         Replies the message with REPLY_FOOTER appended and distinguishes that comment.
-        
+
         Args:
             String message: The message to leave.
         """
@@ -91,7 +91,7 @@ class Report(Recorder, RedditBound):
 
         self.submission.mod.flair(self.flair_data[0], self.flair_data[1])
         return self
-        
+
 
     def has_blacklisted_words(self):
         return [i for i in REPLY_IGNORE if i in self.title]
@@ -107,16 +107,17 @@ class Report(Recorder, RedditBound):
                                         # remove trailing pipe
         links = "All previous reports: " + links[:-2] if links else links
         self.previous_links = links
-        return links 
+        return links
 
 
     def reject(self, reason):
-        Report.log.info("Rejecting post {} for {}".format(self.post_id, reason))        
+        Report.log.info("Rejecting post {} for {}".format(self.post_id, reason))
         self.DB.reject_submission(self.post_id, reason)
         return self
 
 
     def mark_read(self):
+        self.log.debug("marking report as read")
         self.DB.add_submission(self.post_id)
         return self
 
@@ -128,6 +129,6 @@ class Report(Recorder, RedditBound):
     def check_restricted(self):
         return (self.user_data is None)
 
-    
+
     def check_duplicate(self):
         return self.DB.user_exists(self.user_id)
