@@ -240,14 +240,14 @@ def check_banned(shouldComment, shouldFlair):
 		# Might as well forward pms here...already have an automated function, why not?
 		for message in reddit.inbox.unread():
 			isComment = isinstance(message, praw.models.Comment)
-			type = "reply" if isComment else "PM"
+			type_ = "reply" if isComment else "PM"
 			if(message.author == AUTHOR):
-				log.debug("Not forwarding {} by AUTHOR ({})".format(type, AUTHOR))
+				log.debug("Not forwarding {} by AUTHOR ({})".format(type_, AUTHOR))
 				return
 
-			log.info("Forwarding {} by {} to {}".format(type, message.author, AUTHOR))
+			log.info("Forwarding {} by {} to {}".format(type_, message.author, AUTHOR))
 
-			reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type, message.author),
+			reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type_, message.author),
 										 "[" + message.body + "]({})".format("https://reddit.com" + message.context) if isComment else message.body)
 			message.mark_read()
 		log.debug("..done")
