@@ -75,7 +75,6 @@ def parse_offense_data(offense):
 		data.append("true")
 	else:
 		data.append("false")
-
 	return data
 
 
@@ -122,8 +121,8 @@ def create_reply(data, previous_links, mode):
 			"| Rank | PP | Playtime | Playcount | Country | Joined |\n"
 			":-:|:-:|:-:|:-:|:-:|:-:\n"
 			"| #{:,} | {} | {} hours | {:,} | {} | ~{} days ago|\n\n"
-			"| Top Plays | Mods | PP | Accuracy | Date |\n"
-			":-:|:-:|:-:|:-:|:-:\n"
+			"| Top Plays | Mods | PP | Accuracy | Date | Replay Download |\n"
+			":-:|:-:|:-:|:-:|:-:|:-:\n"
 			.format(
 					user_data["username"],
 					API_USERS + user_data["user_id"] + "/" + modes[int(mode)],
@@ -137,16 +136,25 @@ def create_reply(data, previous_links, mode):
 
 
 	for play in top_data[0:LIMIT_TOP_PLAYS]:
-		reply += ("| {} | {} | {:,} | {}% ({}) | {} |\n"
+
+		play_data = requests.get(API_BASE + "get_scores?k=" + KEY + "&b=" + play["beatmap_id"] + "&u=" + user_data["user_id"] + "&m=" + mode).json()[0]
+		score_id = play_data["score_id"]
+		replay_available = bool(int(play_data["replay_available"]))
+
+		reply += ("| [{}]({}) | {} | {:,} | {}% ({}) | {} | {} |\n"
 				 .format(
 				 		  parse_map_data(play["beatmap_id"])["title"],
+						  "https://osu.ppy.sh/b/{}".format(play["beatmap_id"]),
 				 		  calc_mods(play["enabled_mods"]),
 				 		  round(float(play["pp"])),
 						  calc_acc(play, mode),
 						  parse_play_rank(play["rank"]),
-				 		  play["date"].split(" ")[0].replace("-", "/") # "2013-06-22 9:11:16" (api) -> "2013/06/22"
+				 		  play["date"].split(" ")[0].replace("-", "/"), # "2013-06-22 9:11:16" (api) -> "2013/06/22"
+						  "[{}]({})".format(score_id, "https://osu.ppy.sh/scores/osu/{}/download".format(score_id)) if replay_available else "Unavailable"
+
 				 ))
 	reply += "\n\n" + previous_links
+
 	return reply
 
 
