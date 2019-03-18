@@ -74,7 +74,7 @@ class DB:
 
 		Args:
 			String post_id: The post_id of the submission to reject
-			String reason: The reason the post was rejectde
+			String reason: The reason the post was rejected
 						   (one of REJECT_BLACKLISTED, REJECT_MALFORMATTED, REJECT_RESTRICTED, REJECT_REPORTED)
 		"""
 
