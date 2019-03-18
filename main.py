@@ -195,7 +195,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 	# database entry so we can still link to it in "all previous reports: "
 	if(previous_id and reddit.submission(id=previous_id).selftext != "[deleted]"):
 		log.debug("User reported in post {} was already reported in the past {} days in post {}".format(report.post_id, LIMIT_DAYS, previous_id))
-		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), previous_links, LIMIT_DAYS))
+		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), previous_links, LIMIT_DAYS)).reject(REJECT_REPORTED)
 		return
 
 	# all special cases handled, finally reply with the data and add to db for sheriff to check

@@ -1,5 +1,5 @@
 import sqlite3
-from config import DB_PATH, LIMIT_DAYS
+from config import DB_PATH, LIMIT_DAYS, LIMIT_CHECK
 import functools
 import time
 
@@ -31,7 +31,8 @@ class DB:
 		Float LIMIT_SECONDS: The threshold, in seconds, for reported_utc when fetching recent users.
 	"""
 
-	LIMIT_SECONDS = time.time() - LIMIT_DAYS * 24 * 60 * 60
+	LIMIT_SECONDS = LIMIT_DAYS * 24 * 60 * 60
+	LIMIT_CHECK_SECONDS = LIMIT_CHECK * 24 * 60 * 60
 
 	def __init__(self, leadless):
 		"""
@@ -159,7 +160,7 @@ class DB:
 			or None otherwise.
 		"""
 
-		result = self.c.execute("SELECT * FROM users WHERE user_id=? AND reported_utc > ?", [user_id, DB.LIMIT_SECONDS]).fetchone()
+		result = self.c.execute("SELECT * FROM users WHERE user_id=? AND reported_utc > ?", [user_id, time.time() - DB.LIMIT_SECONDS]).fetchone()
 		return result[0] if result else None
 
 
@@ -173,7 +174,7 @@ class DB:
 			The values in the columns of the users table that meet the criteria.
 		"""
 
-		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL", [DB.LIMIT_SECONDS]).fetchall()
+		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL", [time.time() - DB.LIMIT_CHECK_SECONDS]).fetchall()
 
 
 	# Misc
