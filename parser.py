@@ -137,7 +137,7 @@ def create_reply(data, previous_links, mode):
 
 	for play in top_data[0:LIMIT_TOP_PLAYS]:
 
-		play_data = requests.get(API_BASE + "get_scores?k=" + KEY + "&b=" + play["beatmap_id"] + "&u=" + user_data["user_id"] + "&m=" + mode).json()[0]
+		play_data = requests.get(API_BASE + "get_scores?k=" + KEY + "&b=" + play["beatmap_id"] + "&u=" + user_data["user_id"] + "&m=" + mode + "&mods=" + play["enabled_mods"]).json()[0]
 		score_id = play_data["score_id"]
 		replay_available = bool(int(play_data["replay_available"]))
 
