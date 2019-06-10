@@ -2,7 +2,7 @@ from config import MODS_INT, MOD_ORDER
 
 def calc_acc(play, mode):
     """
-    Calculates the accuracy of the given play based on the forumla (currently) in https://osu.ppy.sh/help/wiki/Accuracy. 
+    Calculates the accuracy of the given play based on the forumla (currently) in https://osu.ppy.sh/help/wiki/Accuracy.
     Accepts data in the format of a play from get_user_best, get_user_recent, get_scores (for a specific beatmap) or individual plays from get_match
     Returns the accuracy to 2 decimal points
     """
