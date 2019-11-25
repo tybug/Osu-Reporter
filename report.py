@@ -103,7 +103,7 @@ class Report(Recorder, RedditBound):
             return
         links = ""
         for i, report in enumerate(reports, start=1):
-            links += "[{}]({}) | ".format(i, "https://redd.it/" + str(report[0]))
+            links += "[[{}]]({}) | ".format(i, "https://redd.it/" + str(report[0]))
                                         # remove trailing pipe
         links = "All previous reports: " + links[:-2] if links else links
         self.previous_links = links
