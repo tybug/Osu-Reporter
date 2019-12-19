@@ -114,7 +114,7 @@ def create_reply(data, previous_links, mode):
 		return reply
 
 	creation_date = datetime.strptime(user_data["join_date"], "%Y-%m-%d %H:%M:%S") #2018-04-15 01:44:28
-	difference = datetime.now() - creation_date
+	difference = datetime.utcnow() - creation_date
 
 	pp_raw = round(float(user_data["pp_raw"]))
 	reply = ("{}'s profile: {}\n\n"
