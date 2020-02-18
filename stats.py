@@ -25,14 +25,13 @@ def main():
 
     stats = [] # [total reports, blatant reports, normal reports, total restrictions, blatant restrictions, normal restrictions]
     users = {}  # {"user": [total reports, blatant reports, reported users that got restricted], ...}
-
     query = ("SELECT COUNT(*) AS reports, "
             "SUM(CASE WHEN BLATANT = 'true' THEN 1 ELSE 0 END) AS blatant, "
             "SUM(CASE WHEN BLATANT = 'false' THEN 1 ELSE 0 END) AS normal, "
             "SUM(CASE WHEN RESTRICTED_UTC <> 'n/a' THEN 1 ELSE 0 END) AS restrictions, "
             "SUM(CASE WHEN BLATANT = 'true' AND RESTRICTED_UTC <> 'n/a' THEN 1 ELSE 0 END) AS 'blatantRestrictions', "
             "SUM(CASE WHEN BLATANT = 'false' AND RESTRICTED_UTC <> 'n/a' THEN 1 ELSE 0 END) AS 'normalRestrictions' "
-            "FROM STATS")
+            "FROM USERS")
     for row in c.execute(query):
         stats = [row[0], row[1], row[2], row[3], row[4], row[5]]
 
@@ -41,10 +40,10 @@ def main():
              "COUNT(*) as num, "
              "SUM(CASE WHEN BLATANT = 'true' THEN 1 ELSE 0 END) AS blatantCount, "
              "SUM(CASE WHEN RESTRICTED_UTC <> 'n/a' THEN 1 ELSE 0 END) AS restrictedCount "
-             "FROM STATS "
+             "FROM USERS "
              "GROUP BY REPORTEE "
              "ORDER BY num DESC "
-             "LIMIT 5")
+             "LIMIT 20")
     for row in c.execute(query):
         users[row[0]] = [row[1], row[2], row[3]]
 
@@ -52,7 +51,7 @@ def main():
     query = ("SELECT AVG(DIFFERENCE) AS AVG FROM ( "
 	                "SELECT "
 	                "(RESTRICTED_UTC - REPORTED_UTC) AS DIFFERENCE "
-	                "FROM STATS "
+	                "FROM USERS "
 	        "WHERE RESTRICTED_UTC <> 'n/a')")
 
     average_restriction_seconds = c.execute(query).fetchone()[0]
@@ -80,7 +79,7 @@ def main():
                     int(stats[0]), int(stats[3]), int(stats[3]) / int(stats[0]) * 100, # all
                     int(stats[2]), int(stats[5]), int(stats[5]) / int(stats[2]) * 100, # normal
                     int(stats[1]), int(stats[4]), int(stats[4]) / int(stats[1]) * 100) # blatant
-    
+
     for user in users:
         data = users[user]
         body += ("| u/{} | {:,} | {:,} | {:,} | {:.1f}% |\n").format(user, int(data[0]), int(data[1]), int(data[2]), int(data[2]) / int(data[0]) * 100)
@@ -92,4 +91,4 @@ def main():
             "{:.1f} hours").format(hours)
 
 
-    print(body)    
+    print(body)
