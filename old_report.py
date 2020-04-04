@@ -85,7 +85,10 @@ class OldReport(Recorder, RedditBound):
         """
 
         if(self.shouldFlair):
-            self.submission.mod.flair("Resolved", "resolved")
+            # use previous link flair text, will be something like 100-2 (rank 100, 2 previosu reports),
+            # just append -resolved to that so we can still style with green shading and previous report dots
+            flair = self.submission.link_flair_text + "-resolved"
+            self.submission.mod.flair("Resolved", flair)
 
         self.DB.restrict_user(self.post_id, time.time())
         self.DB.restrict_submission(self.post_id)

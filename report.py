@@ -75,9 +75,31 @@ class Report(Recorder, RedditBound):
         """
         Replies to the report with the data for the reported user, including their preivous reports.
         Also adds the user to the users table to be checked for restriction.
+
+        Also flairs the post by number of previous reports and id. Should render #flair useless (it'll get overwritten).
         """
         self.reply(create_reply(self.user_data, getattr(self, "previous_links", ""), self.gamemode))
         self.DB.add_user(self.post_id, self.user_id, self.submission.created_utc, self.offense_data[0], self.offense_data[1], self.submission.author.name)
+
+        # I think this is guaranteed to be at least 1 because we add_user'd right before
+        num_previous_reports = len(self.DB.submissions_from_user(self.user_id)) - 1
+        rank = int(self.user_data[0]["pp_rank"])
+        rank_str = None
+        if rank < 100:
+            rank_str = "100"
+        elif rank < 1000:
+            rank_str = "1k"
+        elif rank < 10000:
+            rank_str = "10k"
+        elif rank < 50000:
+            rank_str = "50k"
+        elif rank < 100000:
+            rank_str = "100k"
+        else:
+            rank_str = "infinity"
+        flair = rank_str + "-" + (str(num_previous_reports) if num_previous_reports <= 4 else "4-plus")
+        self.submission.mod.flair(flair, flair)
+
         return self
 
 
