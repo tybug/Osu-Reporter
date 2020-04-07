@@ -63,14 +63,14 @@ REPLY_FOOTER = ("\n\n***\n\n"
               "^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)").format(VERSION)
 
 # if the title is malformatted
-REPLY_MALFORMATTED = ("Your title was misformatted. Please make sure you follow the [formatting rules]"
-					"(https://www.reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)"
-					", and repost with a correctly formatted title.\n\n"
-                    "Make sure your title begins with [osu!std] with no spaces or its equivelant as layed out in the formatting rules.\n\n"
-                    "If this is a meta or discussion thread, repost with a title containing one of **" +  ", ".join(REPLY_IGNORE) + "**. "
-                    "Meta threads should be posted with [meta] at the beginning of the title.")
+REPLY_MALFORMATTED = ("Your post has been removed because your title was misformatted. Feel free to repost with "
+                      "[the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)."
+                      "\n\n"
+                      "If your post is a meta or discussion thread, repost with a title containing one of **" +  ", ".join(REPLY_IGNORE) + "**. ")
+
 # if the reported user's page gives not found at time of report
-REPLY_RESTRICTED = ("Your post has been removed because the [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted.")
+REPLY_RESTRICTED = ("Your post has been removed because the [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted. "
+                    "Feel free to repost with [the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/).")
 
 # if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
 REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on him. "

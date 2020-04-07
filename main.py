@@ -189,7 +189,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 	report.flair()
 
 	if(report.check_restricted()): # api gives empty json - possible misspelling or user was already restricted
-		report.reply(REPLY_RESTRICTED.format(API_USERS + report.username)).reject(REJECT_RESTRICTED)
+		report.reply(REPLY_RESTRICTED.format(API_USERS + report.username)).reject(REJECT_RESTRICTED, remove=True)
 		return
 
 	previous_links = report.generate_previous_links()
