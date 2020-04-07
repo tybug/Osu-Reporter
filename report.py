@@ -132,9 +132,12 @@ class Report(Recorder, RedditBound):
         return links
 
 
-    def reject(self, reason):
+    def reject(self, reason, remove=False):
         Report.log.info("Rejecting post {} for {}".format(self.post_id, reason))
         self.DB.reject_submission(self.post_id, reason)
+        if remove:
+            Report.log.info("Removing post {}".format(self.post_id))
+            self.submission.mod.remove()
         return self
 
 

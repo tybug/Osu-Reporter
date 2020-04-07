@@ -99,6 +99,12 @@ DB_MAIN = DB(args.leadless)
 
 log.info("Login successful")
 
+# submission = praw.models.Submission(reddit, id="fw74zf")
+# print(submission.link_flair_text)
+# flair = submission.link_flair_text + "-resolved"
+# submission.mod.flair("infinity-1", "infinity-1")
+# sys.exit()
+
 
 def main():
 
@@ -176,7 +182,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 	if(report.check_malformatted()): # title wasn't properly formatted
-		report.reply(REPLY_MALFORMATTED).reject(REJECT_MALFORMATTED)
+		report.reply(REPLY_MALFORMATTED).reject(REJECT_MALFORMATTED, remove=True)
 		return
 
 	# Flair it based on what was in the title

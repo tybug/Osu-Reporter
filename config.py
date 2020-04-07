@@ -9,7 +9,7 @@ AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 3 # disallow new reports on the same user within this many days
 LIMIT_CHECK = 30 # stop checking for restrictions after this many days
 LIMIT_TOP_PLAYS = 5 # how many top plays to provide pp data for
-VERSION = "2.5.1"
+VERSION = "2.6.0"
 
 
 
@@ -70,7 +70,7 @@ REPLY_MALFORMATTED = ("Your title was misformatted. Please make sure you follow 
                     "If this is a meta or discussion thread, repost with a title containing one of **" +  ", ".join(REPLY_IGNORE) + "**. "
                     "Meta threads should be posted with [meta] at the beginning of the title.")
 # if the reported user's page gives not found at time of report
-REPLY_RESTRICTED = ("The [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted.")
+REPLY_RESTRICTED = ("Your post has been removed because the [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted.")
 
 # if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
 REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on him. "
