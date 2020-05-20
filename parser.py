@@ -84,10 +84,14 @@ def parse_user_data(username, mode, type):
 	Returns a list consisting of the json response the osu api gives us when querying data for the given user in the given mode
 	"""
 	user_data = []
+	# temporary hack until peppy fixes old usernames redirecting properly (https://github.com/ppy/osu-api/issues/280)
+	# I have no idea why just appending _ instead of _old works, but it does
+	if username.endswith("_old")
+		username = username.replace("_old", "_")
 	response = requests.get(API_BASE + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
 	user_data = response.json()
 
-	if(not user_data): # empty response (user banned / doesn't exist)
+	if not user_data: # empty response (user banned / doesn't exist)
 		return
 
 	response = requests.get(API_BASE + "get_user_best?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
