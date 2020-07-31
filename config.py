@@ -9,7 +9,7 @@ AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 3 # disallow new reports on the same user within this many days
 LIMIT_CHECK = 30 # stop checking for restrictions after this many days
 LIMIT_TOP_PLAYS = 5 # how many top plays to provide pp data for
-VERSION = "2.6.2"
+VERSION = "2.6.3"
 
 
 
