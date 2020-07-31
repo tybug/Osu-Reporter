@@ -85,7 +85,11 @@ class Report(Recorder, RedditBound):
         num_previous_reports = len(self.DB.submissions_from_user(self.user_id)) - 1
         rank = int(self.user_data[0]["pp_rank"])
         rank_str = None
-        if rank < 100:
+        # users with 0 plays have a rank of zero in the api, we don't want to
+        # flair them as 100 though
+        if rank == 0:
+            rank_str = "infinity"
+        elif rank < 100:
             rank_str = "100"
         elif rank < 1000:
             rank_str = "1k"
