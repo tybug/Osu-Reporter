@@ -52,7 +52,7 @@ OFFENSES = {
 BLATANT = ["blatant", "blat", "obvious"]
 
 
-REPLY_IGNORE = ["megathread", "discussion", "multiple", "[meta]"] # don't comment if the title contains these
+REPLY_IGNORE = ["megathread", "multiple", "[meta]"] # don't comment if the title contains these
 
 CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
 
@@ -66,7 +66,8 @@ REPLY_FOOTER = ("\n\n***\n\n"
 REPLY_MALFORMATTED = ("Your post has been removed because your title was misformatted. Feel free to repost with "
                       "[the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)."
                       "\n\n"
-                      "If your post is a meta or discussion thread, repost with a title containing one of **" +  ", ".join(REPLY_IGNORE) + "**. ")
+                      "If your post is a meta thread, or you are reporting multiple players, repost with a title "
+                      "containing one of **" +  ", ".join(REPLY_IGNORE) + "**.")
 
 # if the reported user's page gives not found at time of report
 REPLY_RESTRICTED = ("Your post has been removed because the [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted. "
