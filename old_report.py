@@ -84,7 +84,7 @@ class OldReport(Recorder, RedditBound):
         Flairs the submission resolved and marks its database entry as restricted
         """
 
-        if(self.shouldFlair):
+        if self.shouldFlair:
             # use previous link flair text, will be something like 100-2 (rank 100, 2 previosu reports),
             # just append -resolved to that so we can still style with green shading and previous report dots
             flair = self.submission.link_flair_text + "-resolved"

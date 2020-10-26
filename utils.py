@@ -14,13 +14,13 @@ def calc_acc(play, mode):
     countkatu = int(play["countkatu"])
     countgeki = int(play["countgeki"])
 
-    if(mode == 0): # std
+    if mode == 0: # std
         acc = (50*count50+ 100*count100 + 300*count300) / (300 * (count0 + count50 + count100 + count300))
-    elif(mode == 1): # taiko
+    elif mode == 1: # taiko
         acc = (0.5*count100 + count300) / (count0 + count100 + count300)
-    elif(mode == 2): # ctb
+    elif mode == 2: # ctb
         acc = (count50 + count100 + count300) / (count0 + countkatu + count50 + count100 + count300)
-    elif(mode == 3): # mania
+    elif mode == 3: # mania
         acc = (50*count50 + 100*count100 + 200*countkatu + 300*(count300 + countgeki)) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
 
     return "{:.2f}".format(acc * 100) # convert to percent

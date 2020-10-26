@@ -13,7 +13,7 @@ def check(function):
 
 	@functools.wraps(function)
 	def wrapper(self, *args, **kwargs):
-		if(getattr(self, "leadless")):
+		if getattr(self, "leadless"):
 			return
 		else:
 			function(self, *args, **kwargs)

@@ -78,7 +78,7 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("prawcore").setLevel(logging.WARNING)
 
 
-if(args.silent):
+if args.silent:
 	logging.disable()
 
 
@@ -108,15 +108,15 @@ log.info("Login successful")
 
 def main():
 
-	if(args.sweep):
+	if args.sweep:
 		sweep()
 		sys.exit(0)
 
-	if(args.stats):
+	if args.stats:
 		stats.main()
 		sys.exit(0)
 
-	if(args.post_id):
+	if args.post_id:
 		log.debug("Processing single submission {}".format(args.post_id))
 		process_submission(praw.models.Submission(reddit, id=args.post_id), not args.comment, not args.flair)
 		sys.exit(0)
@@ -128,7 +128,7 @@ def main():
 		log.info("Received SIGINT, terminating")
 		sys.exit(0)
 
-	# Iterate over every new submission forever. Keeps the bot very low mantainence, as the praw stream can error occasionally
+	# Iterate over every new submission forever
 	while True:
 
 		# two layers of exception handling, one for the processing and one for the submission stream. Probably a relatively dirty way to do it -
@@ -136,7 +136,8 @@ def main():
 		try:
 			for submission in submission_stream:
 				try:
-					if(DB_MAIN.submission_exists(submission.id)): # Already processed; praw returns the past 100 results for streams, previously iterated over or not
+					# Already processed; praw returns the past 100 results for streams, previously iterated over or not
+					if DB_MAIN.submission_exists(submission.id):
 						log.debug("Submission {} is already processed".format(submission.id))
 						continue
 					process_submission(submission, not args.comment, not args.flair)
@@ -163,7 +164,8 @@ def main():
 		except Exception as e:
 			log.critical("some other error in submissiobn stream: {}".format(str(e)))
 
-		time.sleep(60 * 2) # sleep for two minutes, give any connection issues some time to resolve itself
+		# sleep for two minutes, give any connection issues some time to resolve itself
+		time.sleep(60 * 2)
 
 
 
@@ -175,20 +177,22 @@ def process_submission(submission, shouldComment, shouldFlair):
 	report = Report(submission, shouldComment, shouldFlair, DB_MAIN)
 	report.mark_read()
 
-
-	if(report.has_blacklisted_words()): # for discssion threads etc
+	# for discssion threads etc
+	if report.has_blacklisted_words():
 		report.reject(REJECT_BLACKLISTED)
 		return
 
 
-	if(report.check_malformatted()): # title wasn't properly formatted
+	# title wasn't properly formatted
+	if report.check_malformatted():
 		report.reply(REPLY_MALFORMATTED).reject(REJECT_MALFORMATTED, remove=True)
 		return
 
-	# Flair it based on what was in the title
+	# flair it based on what was in the title
 	report.flair()
 
-	if(report.check_restricted()): # api gives empty json - possible misspelling or user was already restricted
+	# api gives empty json - possible misspelling or user was already restricted
+	if report.check_restricted():
 		report.reply(REPLY_RESTRICTED.format(API_USERS + report.username)).reject(REJECT_RESTRICTED, remove=True)
 		return
 
@@ -199,7 +203,7 @@ def process_submission(submission, shouldComment, shouldFlair):
 	# If the previous submission says removed, the author likely deleted it and no one gains anything by the bot
 	# linking back there. We still want to preserve any potential history in the thread so we don't modify its
 	# database entry so we can still link to it in "all previous reports: "
-	if(previous_id and reddit.submission(id=previous_id).selftext != "[deleted]"):
+	if previous_id and reddit.submission(id=previous_id).selftext != "[deleted]":
 		log.debug("User reported in post {} was already reported in the past {} days in post {}".format(report.post_id, LIMIT_DAYS, previous_id))
 		report.reply(REPLY_REPORTED.format(API_USERS + report.user_id, "https://redd.it/" + str(previous_id), previous_links, LIMIT_DAYS)).reject(REJECT_REPORTED)
 		return
@@ -230,8 +234,7 @@ def check_banned(shouldComment, shouldFlair):
 			submission = reddit.submission(id=post_id)
 			report = OldReport(submission, shouldComment, shouldFlair, record, DB_CHECK)
 
-
-			if(report.check_restricted()): # user was restricted
+			if report.check_restricted():
 				# resolve the original post (the one we checked)
 				log.info("resolving post {}".format(report.post_id))
 				report.resolve()
@@ -247,7 +250,7 @@ def check_banned(shouldComment, shouldFlair):
 		for message in reddit.inbox.unread():
 			isComment = isinstance(message, praw.models.Comment)
 			type_ = "reply" if isComment else "PM"
-			if(message.author == AUTHOR):
+			if message.author == AUTHOR:
 				log.debug("Not forwarding {} by AUTHOR ({})".format(type_, AUTHOR))
 				return
 
@@ -275,7 +278,7 @@ def check_banned(shouldComment, shouldFlair):
 def sweep():
 	subreddit = reddit.subreddit(SUB)
 	for submission in subreddit.new(limit=100):
-		if(DB_MAIN.submission_exists(submission.id)):
+		if DB_MAIN.submission_exists(submission.id):
 			continue
 		process_submission(submission, not args.comment, True)
 

@@ -13,7 +13,7 @@ def parse_title_data(title):
 	[Gamemode, player_name, [offense_name, blatant?], [flair_name, css_class]]
 	"""
 	title_data = TITLE_MATCH.match(title)
-	if(not title_data): # regex didn't match
+	if not title_data: # regex didn't match
 		return None
 
 	gamemode = parse_gamemode(title_data.group(1))
@@ -27,7 +27,7 @@ def parse_title_data(title):
 
 
 
-def parse_gamemode(input):
+def parse_gamemode(input_):
 	"""
 	Parses the gamemode from the given string ("std", "s", "taiko", "mania", "fuits").
 	Returns the number (as a string) the osu api links expects for each gamemode.
@@ -35,7 +35,7 @@ def parse_gamemode(input):
 	"""
 
 	for gamemode in GAMEMODES:
-		if(input in GAMEMODES[gamemode]):
+		if input_ in GAMEMODES[gamemode]:
 			return gamemode
 
 	return "0" # assume std if all else fails
@@ -48,9 +48,12 @@ def parse_flair_data(title):
 	or Cheating if no match could be found
 	"""
 
-	title = re.split("[|\s/]+", title) # Match on all words; if the title was something like "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would check "account", "sharing", "multi", "[", "discussion", "]"
+	# Match on all words; if the title was something like
+	# "[osu!std] rttyu-i | Account Sharing/Multi [ Discussion ]" it would
+	# check "account", "sharing", "multi", "[", "discussion", "]"
+	title = re.split("[|\s/]+", title)
 	for flair in FLAIRS:
-		if([i for i in title if i in FLAIRS[flair]]): # SO magic, checks if any item in L1 is also in L2
+		if [i for i in title if i in FLAIRS[flair]]: # SO magic, checks if any item in L1 is also in L2
 			return [FLAIRS[flair][-1], flair]
 
 	return ["Cheating", "cheating"]
@@ -67,11 +70,12 @@ def parse_offense_data(offense):
 	log.debug("offense split: %s", offense)
 	data = ["other"]
 	for offense_type in OFFENSES:
-		if([i for i in offense if i in OFFENSES[offense_type]]):
+		if [i for i in offense if i in OFFENSES[offense_type]]:
 			data[0] = offense_type
 			break
 
-	if([i for i in offense if i in BLATANT]): # if element of offense is in blatant
+	# if any element of offense is in blatant
+	if [i for i in offense if i in BLATANT]:
 		data.append("true")
 	else:
 		data.append("false")

@@ -40,14 +40,14 @@ class Report(Recorder, RedditBound):
 
         self.title_data = parse_title_data(self.title)
 
-        if(self.title_data is not None):
+        if self.title_data is not None:
             self.gamemode = self.title_data[0]
             self.username = self.title_data[1]
             self.offense_data = self.title_data[2]
             self.flair_data = self.title_data[3]
             self.user_data = parse_user_data(self.username, self.gamemode, "string")
 
-            if(self.user_data is not None):
+            if self.user_data is not None:
                 self.user_id = self.user_data[0]["user_id"]
 
 
@@ -61,7 +61,7 @@ class Report(Recorder, RedditBound):
             String message: The message to leave.
         """
 
-        if(not self.shouldComment):
+        if not self.shouldComment:
             Report.log.debug("Flag set; not leaving reply on post {}".format(self.submission.id))
             return self
 
@@ -108,10 +108,10 @@ class Report(Recorder, RedditBound):
 
 
     def flair(self):
-        if(self.submission.link_flair_text == "Resolved"):
+        if self.submission.link_flair_text == "Resolved":
             return self
 
-        if(not self.shouldFlair):
+        if not self.shouldFlair:
             Report.log.debug("Flag set; not flairing post {} as {}".format(self.post_id, self.flair_data[1]))
             return self
 
@@ -125,7 +125,7 @@ class Report(Recorder, RedditBound):
 
     def generate_previous_links(self):
         reports = self.DB.submissions_from_user(self.user_id)
-        if(not reports):
+        if not reports:
             return
         links = ""
         for i, report in enumerate(reports, start=1):
