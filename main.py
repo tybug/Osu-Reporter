@@ -90,10 +90,6 @@ reddit = praw.Reddit(client_id=secret.ID,
                      username=secret.USERNAME,
                      password=secret.PASSWORD)
 
-# keep submission stream global as well. PRAW streams save internal state, so if there's an error we can re-use the stream without duplicating thread checks.
-subreddit = reddit.subreddit(SUB)
-submission_stream = subreddit.stream.submissions()
-
 # db interface with a single connection and cursor. Only create this once to limit connections, then pass it to each recorder object (reports and sheriffs)
 DB_MAIN = DB(args.leadless)
 
@@ -131,8 +127,9 @@ def main():
 	# Iterate over every new submission forever
 	while True:
 
-		# two layers of exception handling, one for the processing and one for the submission stream. Probably a relatively dirty way to do it -
-		# (all error handling should happen in process_submission?) - but a I said it keeps the bot low mantainence.
+		subreddit = reddit.subreddit(SUB)
+		submission_stream = subreddit.stream.submissions()
+		# two layers of exception handling, one for the processing and one for the submission stream
 		try:
 			for submission in submission_stream:
 				try:
