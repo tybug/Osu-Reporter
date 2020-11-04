@@ -159,7 +159,7 @@ def main():
 		except json.decoder.JSONDecodeError as e:
 			log.warning("JSONDecode exception in submission stream: {}.".format(str(e)))
 		except Exception as e:
-			log.critical("some other error in submissiobn stream: {}".format(str(e)))
+			log.critical("some other error in submission stream: {}".format(str(e)))
 
 		# sleep for two minutes, give any connection issues some time to resolve itself
 		time.sleep(60 * 2)
