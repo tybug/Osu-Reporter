@@ -7,6 +7,13 @@ from config import (GAMEMODES, FLAIRS, OFFENSES, BLATANT, TITLE_MATCH,
 					API_BASE, API_USERS, REPLY_FOOTER, LIMIT_TOP_PLAYS)
 from utils import calc_acc, calc_mods, parse_play_rank
 
+from circleguard import Circleguard, ReplayID
+# yes yes, globals bad, I know. The rest of this codebase is already crappy
+# though so what's the harm in making it a little worse.
+# TODO cache? reports are pretty infrequent though, probably not necessary,
+# though they do get repeated sometimes.
+cg = Circleguard(KEY)
+
 def parse_title_data(title):
 	"""
 	Returns a list containing the title data, or None if the regex failed to match.
@@ -105,12 +112,26 @@ def parse_user_data(username, mode, type):
 
 
 
-def create_reply(data, previous_links, mode):
+def create_reply(text, data, previous_links, mode):
 	"""
+	Text is the text of the reddit submission
 	Data is a list of lists - element one is user data, the second element is a list of top plays info json
 	Returns a reddit reply-ready string, containing the user's profile, a table with relevant stats of that user,
 	and a table with that user's top plays
 	"""
+
+	sim = None
+	cheated_match = re.search(r"\(cheated\): https:\/\/osu\.ppy\.sh\/scores\/osu\/(\d+)\/download", text)
+	original_match = re.search(r"\(original\): https:\/\/osu\.ppy\.sh\/scores\/osu\/(\d+)\/download", text)
+
+	if cheated_match and original_match:
+		cheated_id = int(cheated_match.group(1))
+		original_id = int(original_match.group(1))
+
+		cheated = ReplayID(cheated_id)
+		original = ReplayID(original_id)
+		sim = cg.similarity(cheated, original)
+
 
 	modes = ["osu", "taiko", "fruits", "mania"] # can't use ?m=0 to specify a gamepage in userpage url unfortunately
 	user_data = data[0]
@@ -162,6 +183,11 @@ def create_reply(data, previous_links, mode):
 
 				 ))
 	reply += "\n\n" + previous_links
+
+	# sim can be 0 which is falsey, so direct comparison to None
+	if sim != None:
+		reply += (f"\n\nSimilarity of replays [{cheated_id}](https://osu.ppy.sh/scores/osu/{cheated_id}) "
+				  f"and [{original_id}](https://osu.ppy.sh/scores/osu/{original_id}): {round(sim, 2)}")
 
 	return reply
 

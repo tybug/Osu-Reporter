@@ -17,6 +17,7 @@ class RedditBound:
         self.post_id = submission.id
         self.short_link = "https://redd.it/" + self.post_id
         self.long_link = submission.permalink
+        self.text = submission.selftext
 
         self.shouldComment = shouldComment
         self.shouldFlair = shouldFlair

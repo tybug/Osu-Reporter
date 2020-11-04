@@ -78,7 +78,7 @@ class Report(Recorder, RedditBound):
 
         Also flairs the post by number of previous reports and id. Should render #flair useless (it'll get overwritten).
         """
-        self.reply(create_reply(self.user_data, getattr(self, "previous_links", ""), self.gamemode))
+        self.reply(create_reply(self.text, self.user_data, getattr(self, "previous_links", ""), self.gamemode))
         self.DB.add_user(self.post_id, self.user_id, self.submission.created_utc, self.offense_data[0], self.offense_data[1], self.submission.author.name)
 
         # I think this is guaranteed to be at least 1 because we add_user'd right before
