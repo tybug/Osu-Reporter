@@ -121,8 +121,8 @@ def create_reply(text, data, previous_links, mode):
 	"""
 
 	sim = None
-	cheated_match = re.search(r"\(cheated\): https:\/\/osu\.ppy\.sh\/scores\/osu\/(\d+)\/download", text)
-	original_match = re.search(r"\(original\): https:\/\/osu\.ppy\.sh\/scores\/osu\/(\d+)\/download", text)
+	cheated_match = re.search(r"\(cheated\): https:\/\/osu\.ppy\.sh\/scores\/osu\/(\d+)(\/download)?", text)
+	original_match = re.search(r"\(original\): https:\/\/osu\.ppy\.sh\/scores\/osu\/(\d+)\(/download)?", text)
 
 	if cheated_match and original_match:
 		cheated_id = int(cheated_match.group(1))
