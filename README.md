@@ -1,5 +1,7 @@
 # Osu-Reporter
-A reddit bot to automate housekeeping tasks on r/osureport
+A reddit bot to automate housekeeping tasks on r/osureport.
+
+**A warning:** I am not proud of this code. It was one of the first things I wrote in python. It badly needs a rewrite but it "just works" right now and I haven't had time to rewrite it yet.
 
 ## Features
 * Flairs posts on submission based on title
