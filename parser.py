@@ -179,7 +179,7 @@ def create_reply(text, data, previous_links, mode):
 						  calc_acc(play, mode),
 						  parse_play_rank(play["rank"]),
 				 		  play["date"].split(" ")[0].replace("-", "/"), # "2013-06-22 9:11:16" (api) -> "2013/06/22"
-						  "[{}]({})".format(score_id, "https://osu.ppy.sh/scores/osu/{}".format(score_id)) if replay_available else "Unavailable"
+						  "[{}]({})".format(score_id, "https://osu.ppy.sh/scores/{}/{}".format(modes[int(mode)], score_id)) if replay_available else "Unavailable"
 
 				 ))
 	reply += "\n\n" + previous_links
