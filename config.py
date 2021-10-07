@@ -83,7 +83,7 @@ REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on
 
 
 # Parse Config
-TITLE_MATCH = re.compile("\[(?:(?:(?:(?:osu|o)!)?(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!)(?: and (?:(?:(?:(?:osu|o)!)?(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!))*](.*)")
+TITLE_MATCH = re.compile("\[(?:(?:(?:(?:osu|o)!)?(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!)(?: and (?:(?:(?:(?:osu|o)!)?(?:standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!))*](.*)")
 
 # for posts not fully processed by the bot
 REJECT_BLACKLISTED = "blacklisted"
