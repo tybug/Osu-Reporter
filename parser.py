@@ -96,9 +96,11 @@ def parse_user_data(username, mode, type):
 	"""
 	user_data = []
 	# temporary hack until peppy fixes old usernames redirecting properly (https://github.com/ppy/osu-api/issues/280)
-	# I have no idea why just appending _ instead of _old works, but it does
+	# I have no idea why just appending _ instead of _old works, but it does.
+	# update 03/12/2023: I think _old -> _ broke at some point, but magnus noticed _old -> ` old` 
+	# (replace _ with space) works, for whatever reason.
 	if username.endswith("_old"):
-		username = username.replace("_old", "_")
+		username = username.replace("_old", " old")
 	response = requests.get(API_BASE + "get_user?k=" + KEY + "&u=" + username + "&m=" + mode + "&type=" + type)
 	user_data = response.json()
 
