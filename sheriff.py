@@ -27,3 +27,5 @@ class Sheriff(Recorder):
         return self.DB.get_recent_users()
 
 
+    def get_recentish_records(self):
+        return self.DB.get_recentish_users()

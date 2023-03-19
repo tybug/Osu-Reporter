@@ -210,10 +210,14 @@ def process_submission(submission, shouldComment, shouldFlair):
 
 
 
+checked_times = 0
+
 def check_banned(shouldComment, shouldFlair):
 	thread = threading.Timer(CHECK_INTERVAL * 60, check_banned, [shouldComment, shouldFlair])
 	thread.daemon = True # Dies when the main thread dies
 	thread.start()
+	global checked_times
+	checked_times += 1
 
 
 	try:
@@ -223,6 +227,13 @@ def check_banned(shouldComment, shouldFlair):
 		sheriff = Sheriff(DB_CHECK)
 
 		records = sheriff.get_records()
+
+		# check all recentish records instead
+		# occurs roughly once a day with a check interval of 15 minutes
+		if checked_times % 100 == 0:
+			records = sheriff.get_recentish_records()
+			log.debug("checking recentish records")
+
 		log.debug("")
 		log.debug("Checking " + str(len(records)) + " posts for restrictions")
 		for record in records: # only retrieves records in the past month

@@ -7,7 +7,8 @@ API_BASE = "https://osu.ppy.sh/api/"
 API_USERS = "https://osu.ppy.sh/users/"
 AUTHOR = "tybug2" # reddit user to forward replies and dms to
 LIMIT_DAYS = 3 # disallow new reports on the same user within this many days
-LIMIT_CHECK = 30 # stop checking for restrictions after this many days
+LIMIT_CHECK = 30 # check for restrictions much less frequently after this many days
+LIMIT_CHECK_INFREQUENT = 30 * 6 # stop checking for restrictions after this many days. half a year
 LIMIT_TOP_PLAYS = 5 # how many top plays to provide pp data for
 VERSION = "2.7.3"
 

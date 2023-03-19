@@ -1,5 +1,5 @@
 import sqlite3
-from config import DB_PATH, LIMIT_DAYS, LIMIT_CHECK
+from config import DB_PATH, LIMIT_DAYS, LIMIT_CHECK, LIMIT_CHECK_INFREQUENT
 import functools
 import time
 
@@ -33,6 +33,7 @@ class DB:
 
 	LIMIT_SECONDS = LIMIT_DAYS * 24 * 60 * 60
 	LIMIT_CHECK_SECONDS = LIMIT_CHECK * 24 * 60 * 60
+	LIMIT_CHECK_INFREQUENT_SECONDS = LIMIT_CHECK_INFREQUENT * 24 * 60 * 60
 
 	def __init__(self, leadless):
 		"""
@@ -174,7 +175,17 @@ class DB:
 			The values in the columns of the users table that meet the criteria.
 		"""
 
-		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL", [time.time() - DB.LIMIT_CHECK_SECONDS]).fetchall()
+		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL",
+			[time.time() - DB.LIMIT_CHECK_SECONDS]).fetchall()
+
+	def get_recentish_users(self):
+		"""
+		Users which have been reported recently and are not restricted yet, but
+		in a larger time frame than ``get_recent_users``. These users will
+		be checked less frequently than ``get_recent_users``.
+		"""
+		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL",
+			[time.time() - DB.LIMIT_CHECK_INFREQUENT_SECONDS]).fetchall()
 
 
 	# Misc
