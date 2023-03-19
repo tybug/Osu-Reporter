@@ -267,7 +267,17 @@ def check_banned(shouldComment, shouldFlair):
 			reddit.redditor(AUTHOR).message("Forwarding {} from u/{}".format(type_, message.author),
 										 "[" + message.body + "]({})".format("https://reddit.com" + message.context) if isComment else message.body)
 			message.mark_read()
+
+
+
+		log.debug("Done. Checking spam-removed reports")
+		for submission in reddit.subreddit("mod").mod.spam(only="submissions"):
+			if submission.removed_by is None:
+				log.info(f"approving spam-removed submission {submission}")
+				submission.mod.approve()
+
 		log.debug("..done")
+
 	except RequestException as e:
 		log.warning("Request exception while checking old reports: {}".format(str(e)))
 	except ServerError as e:
