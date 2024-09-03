@@ -75,7 +75,7 @@ REPLY_RESTRICTED = ("Your post has been removed because the [user you reported](
                     "Feel free to repost with [the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/).")
 
 # if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
-REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread(s) on him. "
+REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread on them. "
                             "[Please contribute your evidence and thoughts to that thread instead!]({})"
                             "\n\n"
                             "{}"
