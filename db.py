@@ -3,195 +3,209 @@ from config import DB_PATH, LIMIT_DAYS, LIMIT_CHECK, LIMIT_CHECK_INFREQUENT
 import functools
 import time
 
+
 # only executes the function if leadless is false
 def check(function):
-	"""
-	Doesn't let the decorated function execute if self.leadless is True.
+    """
+    Doesn't let the decorated function execute if self.leadless is True.
 
-	Returns if leadless is True, executes the function otherwise.
-	"""
+    Returns if leadless is True, executes the function otherwise.
+    """
 
-	@functools.wraps(function)
-	def wrapper(self, *args, **kwargs):
-		if getattr(self, "leadless"):
-			return
-		else:
-			function(self, *args, **kwargs)
-	return wrapper
+    @functools.wraps(function)
+    def wrapper(self, *args, **kwargs):
+        if getattr(self, "leadless"):
+            return
+        else:
+            function(self, *args, **kwargs)
+
+    return wrapper
 
 
 class DB:
-	"""
-	Manages read/write intercations with the database.
+    """
+    Manages read/write intercations with the database.
 
-	Attributes:
-		Connection conn: The database connection.
-		Cursor c = The database cursor.
-		Boolean leadless: True if the instance should not write to the database, False otherwise.
-		Float LIMIT_SECONDS: The threshold, in seconds, for reported_utc when fetching recent users.
-	"""
+    Attributes:
+            Connection conn: The database connection.
+            Cursor c = The database cursor.
+            Boolean leadless: True if the instance should not write to the database, False otherwise.
+            Float LIMIT_SECONDS: The threshold, in seconds, for reported_utc when fetching recent users.
+    """
 
-	LIMIT_SECONDS = LIMIT_DAYS * 24 * 60 * 60
-	LIMIT_CHECK_SECONDS = LIMIT_CHECK * 24 * 60 * 60
-	LIMIT_CHECK_INFREQUENT_SECONDS = LIMIT_CHECK_INFREQUENT * 24 * 60 * 60
+    LIMIT_SECONDS = LIMIT_DAYS * 24 * 60 * 60
+    LIMIT_CHECK_SECONDS = LIMIT_CHECK * 24 * 60 * 60
+    LIMIT_CHECK_INFREQUENT_SECONDS = LIMIT_CHECK_INFREQUENT * 24 * 60 * 60
 
-	def __init__(self, leadless):
-		"""
-		Initalizes a DB instance.
+    def __init__(self, leadless):
+        """
+        Initalizes a DB instance.
 
-		Attributes:
-			Connection conn: The database connection.
-			Cursor c = The database cursor.
-			Boolean leadless: True if the instance should not write to the database, False otherwise.
-		"""
+        Attributes:
+                Connection conn: The database connection.
+                Cursor c = The database cursor.
+                Boolean leadless: True if the instance should not write to the database, False otherwise.
+        """
 
-		self.conn = sqlite3.connect(DB_PATH)
-		self.c = self.conn.cursor()
-		self.leadless = leadless
+        self.conn = sqlite3.connect(DB_PATH)
+        self.c = self.conn.cursor()
+        self.leadless = leadless
 
+    # Submissions
+    @check
+    def add_submission(self, post_id):
+        """
+        Adds a submission to the database.
 
-	# Submissions
-	@check
-	def add_submission(self, post_id):
-		"""
-		Adds a submission to the database.
+        Inserts a new entry to the SUBMISSIONS table with the given post_id and None/False for the other fields.
 
-		Inserts a new entry to the SUBMISSIONS table with the given post_id and None/False for the other fields.
+        Args:
+                String post_id: The post_id value of the sql entry
+        """
 
-		Args:
-			String post_id: The post_id value of the sql entry
-		"""
+        self.c.execute(
+            "INSERT INTO submissions VALUES(?, ?, ?, ?)", [post_id, None, None, False]
+        )
+        self.conn.commit()
 
-		self.c.execute("INSERT INTO submissions VALUES(?, ?, ?, ?)", [post_id, None, None, False])
-		self.conn.commit()
+    @check
+    def reject_submission(self, post_id, reason):
+        """
 
+        Marks a submisison as rejected.
 
-	@check
-	def reject_submission(self, post_id, reason):
-		"""
+        Updates the entry in the SUBMISSIONS table with the given post id to be rejected with the given reason.
 
-		Marks a submisison as rejected.
+        Args:
+                String post_id: The post_id of the submission to reject
+                String reason: The reason the post was rejected
+                                           (one of REJECT_BLACKLISTED, REJECT_MALFORMATTED, REJECT_RESTRICTED, REJECT_REPORTED)
+        """
 
-		Updates the entry in the SUBMISSIONS table with the given post id to be rejected with the given reason.
+        self.c.execute(
+            "UPDATE submissions SET rejected=?, reason=? WHERE id=?",
+            [True, reason, post_id],
+        )
+        self.conn.commit()
 
-		Args:
-			String post_id: The post_id of the submission to reject
-			String reason: The reason the post was rejected
-						   (one of REJECT_BLACKLISTED, REJECT_MALFORMATTED, REJECT_RESTRICTED, REJECT_REPORTED)
-		"""
+    def restrict_submission(self, post_id):
+        """
+        Marks a submission as restricted
 
-		self.c.execute("UPDATE submissions SET rejected=?, reason=? WHERE id=?", [True, reason, post_id])
-		self.conn.commit()
+        Updates the entry in the SUBMISSIONS table with the given post id to be restricted
 
+        Args:
+                String post_id: The post_id of the submission to mark restricted
+        """
 
-	def restrict_submission(self, post_id):
-		"""
-		Marks a submission as restricted
+        self.c.execute(
+            "UPDATE submissions SET restricted=? WHERE id=?", [True, post_id]
+        )
+        self.conn.commit()
 
-		Updates the entry in the SUBMISSIONS table with the given post id to be restricted
+    def submission_exists(self, post_id):
+        """
+        Checks if a submission exists
 
-		Args:
-			String post_id: The post_id of the submission to mark restricted
-		"""
+        Returns True if a submission exists in the SUBMISSIONS table with the given post_id, False otherwise
 
-		self.c.execute("UPDATE submissions SET restricted=? WHERE id=?", [True, post_id])
-		self.conn.commit()
+        Args:
+                String post_id: the post_id to check for the existence of
+        """
 
+        return (
+            True
+            if self.c.execute(
+                "SELECT * FROM submissions WHERE id=?", [post_id]
+            ).fetchone()
+            else False
+        )
 
+    # Users
+    @check
+    def add_user(self, post_id, user_id, reported_utc, offense_type, blatant, reportee):
+        """
+        Adds a user to the USERS table with the given information
 
+        Args:
+                String post_id: The post_id of the entry
+                String user_id: The user_id of the entry
+                String reported_utc: The unix timestamp the user was reported at
+                String offense_type: What the user was reported for
+                Boolean blatant: Whether the report called the cheats blatant or not
+                String reportee: The reddit username of the reportee (not including the "u/")
+        """
 
-	def submission_exists(self, post_id):
-		"""
-		Checks if a submission exists
+        data = [post_id, user_id, reported_utc, None, offense_type, blatant, reportee]
+        self.c.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?)", data)
+        self.conn.commit()
 
-		Returns True if a submission exists in the SUBMISSIONS table with the given post_id, False otherwise
+    @check
+    def restrict_user(self, post_id, time_utc):
+        """
+        Restricts the user reported in the given post_id
 
-		Args:
-			String post_id: the post_id to check for the existence of
-		"""
+        Updates the USERS table with the given post_id to have a restricted_utc of the passed time
 
-		return True if self.c.execute("SELECT * FROM submissions WHERE id=?", [post_id]).fetchone() else False
+        Args:
+                String post_id: The post_id of the report to restrict
+                String time_utc: The time the user was reported at
+        """
 
+        self.c.execute(
+            "UPDATE users SET RESTRICTED_UTC=? WHERE post_id=?", [time_utc, post_id]
+        )
+        self.conn.commit()
 
+    def user_exists(self, user_id):
+        """
+        Checks if a user exists.
 
-	# Users
-	@check
-	def add_user(self, post_id, user_id, reported_utc, offense_type, blatant, reportee):
-		"""
-		Adds a user to the USERS table with the given information
+        Checks if a user exists in the USERS table that was reported within the past LIMIT_SECONDS (equivelant to LIMIT_DAYS) seconds.
 
-		Args:
-			String post_id: The post_id of the entry
-			String user_id: The user_id of the entry
-			String reported_utc: The unix timestamp the user was reported at
-			String offense_type: What the user was reported for
-			Boolean blatant: Whether the report called the cheats blatant or not
-			String reportee: The reddit username of the reportee (not including the "u/")
-		"""
+        Returns:
+                The post_id of the entry if an entry meeting criteria was found,
+                or None otherwise.
+        """
 
-		data = [post_id, user_id, reported_utc, None, offense_type, blatant, reportee]
-		self.c.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?)", data)
-		self.conn.commit()
+        result = self.c.execute(
+            "SELECT * FROM users WHERE user_id=? AND reported_utc > ?",
+            [user_id, time.time() - DB.LIMIT_SECONDS],
+        ).fetchone()
+        return result[0] if result else None
 
+    def get_recent_users(self):
+        """
+        Gets recently reported users.
 
-	@check
-	def restrict_user(self, post_id, time_utc):
-		"""
-		Restricts the user reported in the given post_id
+        Retrives users that were reported within the past LIMIT_SECONDS seconds, and are not restricted yet.
 
-		Updates the USERS table with the given post_id to have a restricted_utc of the passed time
+        Returns:
+                The values in the columns of the users table that meet the criteria.
+        """
 
-		Args:
-			String post_id: The post_id of the report to restrict
-			String time_utc: The time the user was reported at
-		"""
+        return self.c.execute(
+            "SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL",
+            [time.time() - DB.LIMIT_CHECK_SECONDS],
+        ).fetchall()
 
-		self.c.execute("UPDATE users SET RESTRICTED_UTC=? WHERE post_id=?", [time_utc, post_id])
-		self.conn.commit()
+    def get_recentish_users(self):
+        """
+        Users which have been reported recently and are not restricted yet, but
+        in a larger time frame than ``get_recent_users``. These users will
+        be checked less frequently than ``get_recent_users``.
+        """
+        return self.c.execute(
+            "SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL",
+            [time.time() - DB.LIMIT_CHECK_INFREQUENT_SECONDS],
+        ).fetchall()
 
+    # Misc
+    def submissions_from_user(self, user_id):
+        """
+        Returns the values in the columns of the users table where they have the given user_id
+        """
 
-	def user_exists(self, user_id):
-		"""
-		Checks if a user exists.
-
-		Checks if a user exists in the USERS table that was reported within the past LIMIT_SECONDS (equivelant to LIMIT_DAYS) seconds.
-
-		Returns:
-			The post_id of the entry if an entry meeting criteria was found,
-			or None otherwise.
-		"""
-
-		result = self.c.execute("SELECT * FROM users WHERE user_id=? AND reported_utc > ?", [user_id, time.time() - DB.LIMIT_SECONDS]).fetchone()
-		return result[0] if result else None
-
-
-	def get_recent_users(self):
-		"""
-		Gets recently reported users.
-
-		Retrives users that were reported within the past LIMIT_SECONDS seconds, and are not restricted yet.
-
-		Returns:
-			The values in the columns of the users table that meet the criteria.
-		"""
-
-		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL",
-			[time.time() - DB.LIMIT_CHECK_SECONDS]).fetchall()
-
-	def get_recentish_users(self):
-		"""
-		Users which have been reported recently and are not restricted yet, but
-		in a larger time frame than ``get_recent_users``. These users will
-		be checked less frequently than ``get_recent_users``.
-		"""
-		return self.c.execute("SELECT * FROM users WHERE reported_utc > ? AND restricted_utc IS NULL",
-			[time.time() - DB.LIMIT_CHECK_INFREQUENT_SECONDS]).fetchall()
-
-
-	# Misc
-	def submissions_from_user(self, user_id):
-		"""
-		Returns the values in the columns of the users table where they have the given user_id
-		"""
-
-		return self.c.execute("SELECT * FROM users WHERE user_id=?", [user_id]).fetchall()
+        return self.c.execute(
+            "SELECT * FROM users WHERE user_id=?", [user_id]
+        ).fetchall()

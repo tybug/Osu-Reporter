@@ -1,4 +1,3 @@
-
 class Recorder:
     """
     Interface for objects that require a database connection to either read from or write to the database.

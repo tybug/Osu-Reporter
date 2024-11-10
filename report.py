@@ -5,6 +5,7 @@ from reddit_bound import RedditBound
 from config import REPLY_FOOTER
 from parser import parse_title_data, parse_user_data, create_reply
 
+
 class Report(Recorder, RedditBound):
     """
     Manages a single report submission.
@@ -18,9 +19,7 @@ class Report(Recorder, RedditBound):
         DB DB: The database interface and connection for this class.
     """
 
-
     log = logging.getLogger()
-
 
     def __init__(self, submission, shouldComment, shouldFlair, DB):
         """
@@ -50,7 +49,6 @@ class Report(Recorder, RedditBound):
             if self.user_data is not None:
                 self.user_id = self.user_data[0]["user_id"]
 
-
     def reply(self, message):
         """
         Replies to the reddit submission with the given message.
@@ -62,14 +60,15 @@ class Report(Recorder, RedditBound):
         """
 
         if not self.shouldComment:
-            Report.log.debug("Flag set; not leaving reply on post {}".format(self.submission.id))
+            Report.log.debug(
+                "Flag set; not leaving reply on post {}".format(self.submission.id)
+            )
             return self
 
         Report.log.info("Replying to submission {}".format(self.submission.id))
         comment = self.submission.reply(message + REPLY_FOOTER)
         comment.mod.distinguish(how="yes", sticky=True)
         return self
-
 
     def reply_data_and_mark(self):
         """
@@ -78,8 +77,22 @@ class Report(Recorder, RedditBound):
 
         Also flairs the post by number of previous reports and id. Should render #flair useless (it'll get overwritten).
         """
-        self.reply(create_reply(self.text, self.user_data, getattr(self, "previous_links", ""), self.gamemode))
-        self.DB.add_user(self.post_id, self.user_id, self.submission.created_utc, self.offense_data[0], self.offense_data[1], self.submission.author.name)
+        self.reply(
+            create_reply(
+                self.text,
+                self.user_data,
+                getattr(self, "previous_links", ""),
+                self.gamemode,
+            )
+        )
+        self.DB.add_user(
+            self.post_id,
+            self.user_id,
+            self.submission.created_utc,
+            self.offense_data[0],
+            self.offense_data[1],
+            self.submission.author.name,
+        )
 
         # I think this is guaranteed to be at least 1 because we add_user'd right before
         num_previous_reports = len(self.DB.submissions_from_user(self.user_id)) - 1
@@ -101,27 +114,32 @@ class Report(Recorder, RedditBound):
             rank_str = "100k"
         else:
             rank_str = "infinity"
-        flair = rank_str + "-" + (str(num_previous_reports) if num_previous_reports <= 4 else "4-plus")
+        flair = (
+            rank_str
+            + "-"
+            + (str(num_previous_reports) if num_previous_reports <= 4 else "4-plus")
+        )
         self.submission.mod.flair(flair, flair)
 
         return self
-
 
     def flair(self):
         if self.submission.link_flair_text == "Resolved":
             return self
 
         if not self.shouldFlair:
-            Report.log.debug("Flag set; not flairing post {} as {}".format(self.post_id, self.flair_data[1]))
+            Report.log.debug(
+                "Flag set; not flairing post {} as {}".format(
+                    self.post_id, self.flair_data[1]
+                )
+            )
             return self
 
         self.submission.mod.flair(self.flair_data[0], self.flair_data[1])
         return self
 
-
     def has_blacklisted_words(self):
         return [i for i in REPLY_IGNORE if i in self.title]
-
 
     def generate_previous_links(self):
         reports = self.DB.submissions_from_user(self.user_id)
@@ -130,11 +148,10 @@ class Report(Recorder, RedditBound):
         links = ""
         for i, report in enumerate(reports, start=1):
             links += "[[{}]]({}) | ".format(i, "https://redd.it/" + str(report[0]))
-                                        # remove trailing pipe
+            # remove trailing pipe
         links = "All previous reports: " + links[:-2] if links else links
         self.previous_links = links
         return links
-
 
     def reject(self, reason, remove=False):
         Report.log.info("Rejecting post {} for {}".format(self.post_id, reason))
@@ -144,20 +161,16 @@ class Report(Recorder, RedditBound):
             self.submission.mod.remove()
         return self
 
-
     def mark_read(self):
         self.log.debug("marking report as read")
         self.DB.add_submission(self.post_id)
         return self
 
-
     def check_malformatted(self):
-        return (self.title_data is None)
-
+        return self.title_data is None
 
     def check_restricted(self):
-        return (self.user_data is None)
-
+        return self.user_data is None
 
     def check_duplicate(self):
         return self.DB.user_exists(self.user_id)

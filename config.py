@@ -1,37 +1,38 @@
 import re
 
 # General Config
-DB_PATH = "db.db" # relative path to database
-SUB = 'osureport' # listen for submissions to this sub
+DB_PATH = "db.db"  # relative path to database
+SUB = "osureport"  # listen for submissions to this sub
 API_BASE = "https://osu.ppy.sh/api/"
 API_USERS = "https://osu.ppy.sh/users/"
-AUTHOR = "tybug2" # reddit user to forward replies and dms to
-LIMIT_DAYS = 3 # disallow new reports on the same user within this many days
-LIMIT_CHECK = 30 # check for restrictions much less frequently after this many days
-LIMIT_CHECK_INFREQUENT = 30 * 6 # stop checking for restrictions after this many days. half a year
-LIMIT_TOP_PLAYS = 5 # how many top plays to provide pp data for
+AUTHOR = "tybug2"  # reddit user to forward replies and dms to
+LIMIT_DAYS = 3  # disallow new reports on the same user within this many days
+LIMIT_CHECK = 30  # check for restrictions much less frequently after this many days
+LIMIT_CHECK_INFREQUENT = (
+    30 * 6
+)  # stop checking for restrictions after this many days. half a year
+LIMIT_TOP_PLAYS = 5  # how many top plays to provide pp data for
 VERSION = "2.7.3"
-
 
 
 # include alternate names for gamemodes (or common mispellings)
 GAMEMODES = {
-			 "0": ["standard", "std", "s"],
-			 "1": ["taiko", "t"],
-             "2": ["catch", "ctb", "fruits", "c"],
-			 "3": ["mania", "m"]
-			 }
+    "0": ["standard", "std", "s"],
+    "1": ["taiko", "t"],
+    "2": ["catch", "ctb", "fruits", "c"],
+    "3": ["mania", "m"],
+}
 
 # css class : [possible matches, ..., ..., flair title]
 # Don't bother accounting for meta or other, hard to parse
 # Prioritizes flair types higher in the list - if a title contains both "discussion" and "multiacc", it will be flaired as "discussion"
 FLAIRS = {
-          "meta": ["[meta]", "Meta"],
-		  "discussion": ["discussion", "Discussion"],
-		  "blatant": ["blatant", "Blatant"],
-		  "multi": ["multi-account", "multiacc", "multi", "multiaccount", "Multi-account"],
-		  "cheating": ["cheating", "cheater", "Cheating"]
-		 }
+    "meta": ["[meta]", "Meta"],
+    "discussion": ["discussion", "Discussion"],
+    "blatant": ["blatant", "Blatant"],
+    "multi": ["multi-account", "multiacc", "multi", "multiaccount", "Multi-account"],
+    "cheating": ["cheating", "cheater", "Cheating"],
+}
 
 
 # for parsing offense type
@@ -41,50 +42,70 @@ FLAIRS = {
 #                     if word in title:
 #                         #binary bit manipulation`
 OFFENSES = {
-            "multi": ["multi", "multiacc", "multi-account", "multiaccount"],
-            "assist": ["assist"], # aim assist
-            "spinhack": ["spinhack", "spin", "spin-hack", "spinhacking", "spin-hacking", ],
-            "stealing": ["stealing", "steal"],
-            "editing": ["editing", "edit", "correction", "replay-editing"],
-            "relax": ["relax", "ur", "cv", "rx"],
-            "auto": ["auto"],
-            "timewarp": ["warp", "timewarp", "time-warp"]
-            }
+    "multi": ["multi", "multiacc", "multi-account", "multiaccount"],
+    "assist": ["assist"],  # aim assist
+    "spinhack": [
+        "spinhack",
+        "spin",
+        "spin-hack",
+        "spinhacking",
+        "spin-hacking",
+    ],
+    "stealing": ["stealing", "steal"],
+    "editing": ["editing", "edit", "correction", "replay-editing"],
+    "relax": ["relax", "ur", "cv", "rx"],
+    "auto": ["auto"],
+    "timewarp": ["warp", "timewarp", "time-warp"],
+}
 BLATANT = ["blatant", "blat", "obvious"]
 
 
-REPLY_IGNORE = ["megathread", "multiple", "[meta]"] # don't comment if the title contains these
+REPLY_IGNORE = [
+    "megathread",
+    "multiple",
+    "[meta]",
+]  # don't comment if the title contains these
 
-CHECK_INTERVAL = 15 # Check for banned users every 15 minutes
+CHECK_INTERVAL = 15  # Check for banned users every 15 minutes
 
 # Comment Config
 # Appended to every comment
-REPLY_FOOTER = ("\n\n***\n\n"
-			  "[^Source](https://github.com/tybug/Osu-Reporter) ^| ^(v{}) "
-              "^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)").format(VERSION)
+REPLY_FOOTER = (
+    "\n\n***\n\n"
+    "[^Source](https://github.com/tybug/Osu-Reporter) ^| ^(v{}) "
+    "^| [^Developer](https://reddit.com/u/tybug2) ^| ^(Reply to leave feedback)"
+).format(VERSION)
 
 # if the title is malformatted
-REPLY_MALFORMATTED = ("Your post has been removed because your title was misformatted. Feel free to repost with "
-                      "[the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)."
-                      "\n\n"
-                      "If your post is a meta thread, or you are reporting multiple players, repost with a title "
-                      "containing one of **" +  ", ".join(REPLY_IGNORE) + "**.")
+REPLY_MALFORMATTED = (
+    "Your post has been removed because your title was misformatted. Feel free to repost with "
+    "[the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)."
+    "\n\n"
+    "If your post is a meta thread, or you are reporting multiple players, repost with a title "
+    "containing one of **" + ", ".join(REPLY_IGNORE) + "**."
+)
 
 # if the reported user's page gives not found at time of report
-REPLY_RESTRICTED = ("Your post has been removed because the [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted. "
-                    "Feel free to repost with [the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/).")
+REPLY_RESTRICTED = (
+    "Your post has been removed because the [user you reported]({}) is already restricted, doesn't exist, or your title was misformatted. "
+    "Feel free to repost with [the correct title](https://reddit.com/r/osureport/comments/5kftu7/changes_to_osureport/)."
+)
 
 # if the reported user already has a report on him in the past LIMIT_DAYS days. Format: profile_link, previous_post_link, LIMIT_DAYS
-REPLY_REPORTED = ("The [user you reported]({}) already has a recent thread on them. "
-                            "[Please contribute your evidence and thoughts to that thread instead!]({})"
-                            "\n\n"
-                            "{}"
-                            "\n\n"
-                            "Note: A new report thread can be made when the old one is {} days old.")
+REPLY_REPORTED = (
+    "The [user you reported]({}) already has a recent thread on them. "
+    "[Please contribute your evidence and thoughts to that thread instead!]({})"
+    "\n\n"
+    "{}"
+    "\n\n"
+    "Note: A new report thread can be made when the old one is {} days old."
+)
 
 
 # Parse Config
-TITLE_MATCH = re.compile("\[(?:(?:(?:(?:osu|o)!)?(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!)(?: and (?:(?:(?:(?:osu|o)!)?(?:standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!))*](.*)")
+TITLE_MATCH = re.compile(
+    "\[(?:(?:(?:(?:osu|o)!)?(standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!)(?: and (?:(?:(?:(?:osu|o)!)?(?:standard|std|s|taiko|t|mania|m|catch|ctb|fruits|c))|osu!))*](.*)"
+)
 
 # for posts not fully processed by the bot
 REJECT_BLACKLISTED = "blacklisted"
@@ -111,10 +132,24 @@ MODS_INT = {
     "SO": 1 << 12,
     "AP": 1 << 13,
     "PF": 1 << 5 | 1 << 14,  # SD is always set along with PF.
-    "V2": 1 << 29
+    "V2": 1 << 29,
 }
 
 MOD_ORDER = [
-    "EZ", "HD", "HT", "DT", "NC", "HR", "FL", "NF",
-    "SD", "PF", "RX", "AP", "SO", "AT", "V2", "TD",
+    "EZ",
+    "HD",
+    "HT",
+    "DT",
+    "NC",
+    "HR",
+    "FL",
+    "NF",
+    "SD",
+    "PF",
+    "RX",
+    "AP",
+    "SO",
+    "AT",
+    "V2",
+    "TD",
 ]

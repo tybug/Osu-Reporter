@@ -1,5 +1,6 @@
 from config import MODS_INT, MOD_ORDER
 
+
 def calc_acc(play, mode):
     """
     Calculates the accuracy of the given play based on the forumla (currently) in https://osu.ppy.sh/help/wiki/Accuracy.
@@ -14,17 +15,25 @@ def calc_acc(play, mode):
     countkatu = int(play["countkatu"])
     countgeki = int(play["countgeki"])
 
-    if mode == 0: # std
-        acc = (50*count50+ 100*count100 + 300*count300) / (300 * (count0 + count50 + count100 + count300))
-    elif mode == 1: # taiko
-        acc = (0.5*count100 + count300) / (count0 + count100 + count300)
-    elif mode == 2: # ctb
-        acc = (count50 + count100 + count300) / (count0 + countkatu + count50 + count100 + count300)
-    elif mode == 3: # mania
-        acc = (50*count50 + 100*count100 + 200*countkatu + 300*(count300 + countgeki)) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
+    if mode == 0:  # std
+        acc = (50 * count50 + 100 * count100 + 300 * count300) / (
+            300 * (count0 + count50 + count100 + count300)
+        )
+    elif mode == 1:  # taiko
+        acc = (0.5 * count100 + count300) / (count0 + count100 + count300)
+    elif mode == 2:  # ctb
+        acc = (count50 + count100 + count300) / (
+            count0 + countkatu + count50 + count100 + count300
+        )
+    elif mode == 3:  # mania
+        acc = (
+            50 * count50
+            + 100 * count100
+            + 200 * countkatu
+            + 300 * (count300 + countgeki)
+        ) / (300 * (count0 + count50 + count100 + countkatu + count300 + countgeki))
 
-    return "{:.2f}".format(acc * 100) # convert to percent
-
+    return "{:.2f}".format(acc * 100)  # convert to percent
 
 
 def calc_mods(mods_int):
@@ -46,5 +55,5 @@ def calc_mods(mods_int):
 
 
 def parse_play_rank(rank):
-    ranks = {"X": "SS", "XH" : "SS", "SH" : "S"}
+    ranks = {"X": "SS", "XH": "SS", "SH": "S"}
     return ranks[rank] if rank in ranks else rank

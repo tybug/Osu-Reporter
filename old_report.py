@@ -5,10 +5,10 @@ from recorder import Recorder
 import time
 
 
-
 import requests
 from config import API_BASE
 from secret import KEY
+
 
 class OldReport(Recorder, RedditBound):
     """
@@ -45,8 +45,10 @@ class OldReport(Recorder, RedditBound):
         Recorder.__init__(self, DB)
         RedditBound.__init__(self, submission, shouldComment, shouldFlair)
 
-        self.user_id = record[1] # user id
-        self.post_date = int(float(record[2])) # post submission date, convert from string to int
+        self.user_id = record[1]  # user id
+        self.post_date = int(
+            float(record[2])
+        )  # post submission date, convert from string to int
         self.offense_type = record[3]
         self.blatant = record[4]
         self.reportee = record[5]
@@ -61,11 +63,27 @@ class OldReport(Recorder, RedditBound):
 
         user_data = None
         try:
-            user_data = parse_user_data(self.user_id, "0", "id")    # gamemode doesn't matter here since we're just
-                                                                    # checking for empty response
+            user_data = parse_user_data(
+                self.user_id, "0", "id"
+            )  # gamemode doesn't matter here since we're just
+            # checking for empty response
         except Exception as e:
-            log = requests.get(API_BASE + "get_user?k=" + KEY + "&u=" + self.user_id + "&m=" + "0" + "&type=" + "id").json()
-            OldReport.log.warning("Exception while parsing user data for user {}: {}. Log: {}".format(self.user_id, str(e), log))
+            log = requests.get(
+                API_BASE
+                + "get_user?k="
+                + KEY
+                + "&u="
+                + self.user_id
+                + "&m="
+                + "0"
+                + "&type="
+                + "id"
+            ).json()
+            OldReport.log.warning(
+                "Exception while parsing user data for user {}: {}. Log: {}".format(
+                    self.user_id, str(e), log
+                )
+            )
             return False
 
         return True if not user_data else False
